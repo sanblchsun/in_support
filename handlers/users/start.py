@@ -19,12 +19,13 @@ async def bot_start(message: types.Message, state: FSMContext):
     list_data_client = sql_object.get_client(message.from_user.id)
     if bool(len(list_data_client)):
         keyboard = request_delete_with_data()
-        await message.answer(f"Привет, {message.from_user.full_name}! Ваши данные для автозаполнения формы заявки:.\n \n"
-                             f"ФИО: {list_data_client[0][1]}\n "
+        await message.answer(f"Привет, {message.from_user.full_name}!\n\n"
+                             f"Ваши данные для автозаполнения формы заявки:\n\n"
+                             f"ФИО: {list_data_client[0][1]}\n"
                              f"Организация: {list_data_client[0][2]}\n"
                              f"e-mail: {list_data_client[0][3]}\n"
                              f"телефон: {list_data_client[0][4]}\n\n"
-                             f"Введите описание ваше обращение в техподдержку",
+                             f"Сейчас опишите вашу ситуацию",
                              reply_markup=keyboard)
         await state.set_state(Form.description)
         await state.update_data(full_name=list_data_client[0][1])
@@ -34,7 +35,7 @@ async def bot_start(message: types.Message, state: FSMContext):
     else:
         keyboard = request_or_reject()
         await message.answer(f"Привет, {message.from_user.full_name}!"
-                             f" \n Вам будет предложено сохранить часть информации, что бы не заполнять ее снова ",
+                             f"\n\nВам будет предложено сохранить часть информации, что бы не заполнять ее снова",
                              reply_markup=keyboard)
         await state.set_state(Form.beginning)
 

@@ -1,3 +1,4 @@
+import emoji
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
@@ -13,13 +14,13 @@ def attach_yes_no():
 
 
 def send_request_yes_no():
-    yes_btn = InlineKeyboardButton("ДА", callback_data="send_yes")
+    yes_btn = InlineKeyboardButton(" ДА", callback_data="send_yes")
     no_btn = InlineKeyboardButton("НЕТ", callback_data="send_no")
     return InlineKeyboardMarkup().add(yes_btn, no_btn)
 
 
 def request_or_reject():
-    rqsr_btn = InlineKeyboardButton('Запольнить заявку', callback_data='create_request')
+    rqsr_btn = InlineKeyboardButton('Заполнить заявку', callback_data='create_request')
     del_btn = InlineKeyboardButton("отмена", callback_data="del_current_request")
     return InlineKeyboardMarkup().add(del_btn, rqsr_btn)
 

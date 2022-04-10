@@ -1,4 +1,5 @@
 import re
+import emoji
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from states.state_form import Form
@@ -39,19 +40,20 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
     await state.update_data(firma=message.text)
     keyboard = save_person_data()
     await message.answer('Сохранить выше введенную информацию, чтобы использовать в следующей заявке\n'
-                         'Нажимая на кнопку ДА вы даете согласие на обработку ваших персональных данных',
+                         'Нажимая на кнопку ДА, вы даете согласие на обработку ваших персональных данных',
                          reply_markup=keyboard)
 
 
 @dp.message_handler(state=Form.description, content_types=['text'])
-async  def action_description(message: types.Message, state: FSMContext):
+async def action_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
     keyboard = attach_yes_no()
-    await message.answer('Хотите приложить к заявке файли или фотографии?', reply_markup=keyboard)
+    await message.answer(emoji.emojize(':linked_paperclips:') +
+                         'Хотите приложить к заявке файли или фотографии?', reply_markup=keyboard)
 
 
 @dp.message_handler(state=Form.attach, content_types=['document'])
-async  def action_document(message: types.Message, state: FSMContext):
+async def action_document(message: types.Message, state: FSMContext):
     await message.answer(f'Обработан файл: {message.document.file_name}')
     url_file = await message.document.get_url()
     async with state.proxy() as data:
@@ -59,7 +61,7 @@ async  def action_document(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=Form.attach, content_types=['photo'])
-async  def action_photo(message: types.Message, state: FSMContext):
+async def action_photo(message: types.Message, state: FSMContext):
     url_file = await message.photo[-1].get_url()
     file_name = str(url_file).split('/')[-1]
     await message.answer(f'Обработан файл: {file_name}')
@@ -68,9 +70,9 @@ async  def action_photo(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=Form.attach, commands=['attach'])
-async  def end_form(message: types.Message, state: FSMContext):
+async def end_form(message: types.Message, state: FSMContext):
     keyboard = send_request_yes_no()
-    await message.answer('Заявка готова, отправить?',
+    await message.answer(emoji.emojize(':envelope:  Заявка готова, отправить?'),
                          reply_markup=keyboard)
     await state.set_state(Form.send_request)
 
@@ -79,12 +81,11 @@ async  def end_form(message: types.Message, state: FSMContext):
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     keyboard = reject_request()
-    await callback_query.message.edit_text("---------------------------------------------\n"
-                                           "-------НАЧАЛО ФОРМЫ ЗАЯВКИ----------------\n\n",
-                                           reply_markup=keyboard)
+    await callback_query.message.edit_text(
+        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'),
+        reply_markup=keyboard)
     await callback_query.message.answer("Введите свои Фамилия и Имя")
     await state.set_state(Form.full_name)
-
 
 
 @dp.callback_query_handler(lambda c: c.data == "del_user_data", state='*')
@@ -92,18 +93,18 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     sql_object = SQLighter("base/db.db")
     sql_object.delete_user_data(callback_query.from_user.id)
-    await callback_query.message.edit_text("---------------------------------------------\n"
-                                           "-------НАЧАЛО ФОРМЫ ЗАЯВКИ----------------\n\n"
-                                           "Вы отменили заявку")
+    await callback_query.message.edit_text(
+        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'))
+    await callback_query.message.answer("Вы отменили заявку")
     await state.finish()
 
 
 @dp.callback_query_handler(lambda c: c.data == "reject_request", state='*')
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text("---------------------------------------------\n"
-                                           "-------НАЧАЛО ФОРМЫ ЗАЯВКИ----------------\n\n"
-                                           "Вы отменили заявку")
+    await callback_query.message.edit_text(
+        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'))
+    await callback_query.message.answer("Вы отменили заявку")
     await state.finish()
 
 
@@ -119,7 +120,8 @@ async def action_request_to_support1(callback_query: types.CallbackQuery, state:
     current_state = await state.get_state()
     if current_state == 'Form:description':
         await bot.answer_callback_query(callback_query_id=callback_query.id)
-        await callback_query.message.edit_text("без  текста вложите файлы или сделайте фотограции\n"
+        await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
+                                               "   без  текста вложите файлы или сделайте фотограции\n"
                                                "после нажмите на ссылку /attach")
         await state.set_state(Form.attach)
     else:
@@ -132,7 +134,7 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
     if current_state == 'Form:description':
         await bot.answer_callback_query(callback_query_id=callback_query.id)
         keyboard = send_request_yes_no()
-        await callback_query.message.edit_text("отправить заявку?", reply_markup=keyboard)
+        await callback_query.message.edit_text(emoji.emojize(":envelope: отправить заявку?"), reply_markup=keyboard)
         await state.set_state(Form.send_request)
     else:
         await callback_query.message.edit_text("---------")
@@ -166,9 +168,9 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
 @dp.callback_query_handler(lambda c: c.data == "save_no", state='*')
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text("Отказ от сохранения.\n"
-                                           "Сейчас опишите вашу ситуацию,\n"
-                                           "(приложить файлы можно будет на следующем этапе)")
+    await callback_query.message.edit_text(emoji.emojize("Отказ от сохранения.\n\n"
+                                                         ":page_facing_up: Сейчас опишите вашу ситуацию,\n\n"
+                                                         "(приложить файлы можно будет на следующем этапе)"))
     await state.set_state(Form.description)
 
 
@@ -183,8 +185,8 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
         current_state['full_name'],
         current_state['telefon'],
         current_state['e_mail'],
-        current_state['firma'],)
+        current_state['firma'], )
     await state.set_state(Form.description)
-    await callback_query.message.edit_text("Сохранены. \n"
-                                           "Сейчас опишите вашу ситуацию,\n"
-                                           "(приложить файлы можно будет на следующем этапе)")
+    await callback_query.message.edit_text(emoji.emojize("Сохранены. \n\n"
+                                                         ":page_facing_up: Сейчас опишите вашу ситуацию,\n\n"
+                                                         "(приложить файлы можно будет на следующем этапе)"))

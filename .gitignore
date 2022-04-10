@@ -1,1 +1,6 @@
 venv/
+base/db.db
+.env
+docker-compose.yml
+Dockerfile
+test.py
