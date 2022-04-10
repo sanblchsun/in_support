@@ -5,7 +5,7 @@ services:
 #    network_mode: "hostchat"
 
   tgbot:
-    container_name: bot_chat_type_anydesk
+    container_name: in_support
     build: .
     volumes:
       - .:/src
