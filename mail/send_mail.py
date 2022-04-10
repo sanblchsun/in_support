@@ -107,24 +107,31 @@ def attach_file(msg, filepath):                             # Функция п�
     if ctype is None or encoding is not None:               # Если тип файла не определяется
         ctype = 'application/octet-stream'                  # Будем использовать общий тип
     maintype, subtype = ctype.split('/', 1)                 # Получаем тип и подтип
-    if maintype == 'text':                                  # Если текстовый файл
-        with open(filepath) as fp:                          # Открываем файл для чтения
-            file = MIMEText(fp.read(), _subtype=subtype)    # Используем тип MIMEText
-            fp.close()                                      # После использования файл обязательно нужно закрыть
-    elif maintype == 'image':                               # Если изображение
-        with open(filepath, 'rb') as fp:
-            file = MIMEImage(fp.read(), _subtype=subtype)
-            fp.close()
-    elif maintype == 'audio':                               # Если аудио
-        with open(filepath, 'rb') as fp:
-            file = MIMEAudio(fp.read(), _subtype=subtype)
-            fp.close()
-    else:                                                   # Неизвестный тип файла
-        with open(filepath, 'rb') as fp:
-            file = MIMEBase(maintype, subtype)              # Используем общий MIME-тип
-            file.set_payload(fp.read())                     # Добавляем содержимое общего типа (полезную нагрузку)
-            fp.close()
-            encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
+    # if maintype == 'text':                                  # Если текстовый файл
+    #     with open(filepath) as fp:                          # Открываем файл для чтения
+    #         file = MIMEText(fp.read(), _subtype=subtype)    # Используем тип MIMEText
+    #         fp.close()                                      # После использования файл обязательно нужно закрыть
+    # elif maintype == 'image':                               # Если изображение
+    #     with open(filepath, 'rb') as fp:
+    #         file = MIMEImage(fp.read(), _subtype=subtype)
+    #         fp.close()
+    # elif maintype == 'audio':                               # Если аудио
+    #     with open(filepath, 'rb') as fp:
+    #         file = MIMEAudio(fp.read(), _subtype=subtype)
+    #         fp.close()
+    # else:                                                   # Неизвестный тип файла
+    #     with open(filepath, 'rb') as fp:
+    #         file = MIMEBase(maintype, subtype)              # Используем общий MIME-тип
+    #         file.set_payload(fp.read())                     # Добавляем содержимое общего типа (полезную нагрузку)
+    #         fp.close()
+    #         encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
+
+    with open(filepath, 'rb') as fp:
+        file = MIMEBase(maintype, subtype)              # Используем общий MIME-тип
+        file.set_payload(fp.read())                     # Добавляем содержимое общего типа (полезную нагрузку)
+        fp.close()
+        encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
+
     file.add_header('Content-Disposition', 'attachment', filename=filename) # Добавляем заголовки
     msg.attach(file)                                        # Присоединяем файл к сообщению
 
