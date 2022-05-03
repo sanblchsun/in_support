@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import mimetypes
 import shutil
@@ -51,7 +52,7 @@ async def send_email_with_attachment(e_mail,
     msg["From"] = FROM
     msg["To"] = "makosov.a@ininsys.ru"
     msg['Reply-To'] = e_mail
-    msg["Subject"] = "новая заявка"
+    msg["Subject"] = "Новая заявка"
     msg["Date"] = formatdate(localtime=True)
 
     # msg["To"] = ', '.join(e_mail)
@@ -135,3 +136,14 @@ def attach_file(msg, filepath):                             # Функция п�
     file.add_header('Content-Disposition', 'attachment', filename=filename) # Добавляем заголовки
     msg.attach(file)                                        # Присоединяем файл к сообщению
 
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
+                               firma="фирма",
+                               full_name='Иван',
+                               cont_telefon='49834889',
+                               description='Ура!')
+    )
+    loop.close()
+    logging.info('сообщение отправлено ура!!')

@@ -1,6 +1,9 @@
 venv/
-base/db.db
+documents/
+db.db
+*.ini
 .env
 docker-compose.yml
 Dockerfile
 test.py
+__pycache__/
