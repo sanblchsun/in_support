@@ -1,5 +1,5 @@
 # telegram_id|full_name|firma|e_mail|telefon
-import logging
+
 import sqlite3
 
 class SQLighter:

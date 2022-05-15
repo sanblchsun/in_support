@@ -34,8 +34,7 @@ async def bot_start(message: types.Message, state: FSMContext):
         await state.update_data(telefon=list_data_client[0][4])
     else:
         keyboard = request_or_reject()
-        await message.answer(f"Привет, {message.from_user.full_name}!"
-                             f"\n\nВам будет предложено сохранить часть информации, что бы не заполнять ее снова",
+        await message.answer(f"Привет, {message.from_user.full_name}!",
                              reply_markup=keyboard)
         await state.set_state(Form.beginning)
 

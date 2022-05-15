@@ -6,4 +6,5 @@ db.db
 docker-compose.yml
 Dockerfile
 test.py
-__pycache__/
+mail/__pycache__/
+*.pyc

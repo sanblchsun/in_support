@@ -15,7 +15,7 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 from mail.html import get_html
 import wget
-
+from base.controlmysql import controlsql
 
 #----------------------------------------------------------------------
 async def send_email_with_attachment(e_mail,
@@ -50,7 +50,7 @@ async def send_email_with_attachment(e_mail,
     # create the message
     msg = MIMEMultipart()
     msg["From"] = FROM
-    msg["To"] = "makosov.a@ininsys.ru"
+    msg["To"] = e_mail
     msg['Reply-To'] = e_mail
     msg["Subject"] = "Новая заявка"
     msg["Date"] = formatdate(localtime=True)
@@ -63,8 +63,8 @@ async def send_email_with_attachment(e_mail,
     if html:
         msg.attach(MIMEText(html, "html"))
 
+    files_list = []
     if http_to_attach is not None:
-        files_list = []
         for key_iter in http_to_attach.keys():
             try:
                 path = f'documents/{http_to_attach[key_iter][0]}/{http_to_attach[key_iter][1]}'
@@ -78,17 +78,18 @@ async def send_email_with_attachment(e_mail,
             files_list.append(pahh_file)
         process_attachement(msg, files_list)
 
-        if bool(len(http_to_attach)):
-            keys = list(http_to_attach.keys())
-            dir_with_file = http_to_attach[keys[0]][0]
-            path1 = f'documents/{dir_with_file}'
-            shutil.rmtree(path1, ignore_errors=False, onerror=None)
-
     server = smtplib.SMTP(host)
     server.starttls()
     server.login(FROM, password)
     server.sendmail(FROM, to_addrs, msg.as_string())
     server.quit()
+
+    await controlsql(e_mail=e_mail,
+                     firma=firma,
+                     full_name=full_name,
+                     cont_telefon=cont_telefon,
+                     description=description,
+                     fils_list=files_list)
 
 
     #==========================================================================================================================
@@ -146,4 +147,3 @@ if __name__ == '__main__':
                                description='Ура!')
     )
     loop.close()
-    logging.info('сообщение отправлено ура!!')

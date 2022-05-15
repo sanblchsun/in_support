@@ -13,14 +13,14 @@ from keyboards.inline.buttons import attach_yes_no, send_request_yes_no, request
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
 async def action_full_name(message: types.Message, state: FSMContext):
     await state.update_data(full_name=message.text)
-    await message.answer("Введите ваш телефон")
+    await message.answer("Укажите Ваш контактный телефон:")
     await state.set_state(Form.telefon)
 
 
 @dp.message_handler(state=Form.telefon, content_types=types.ContentType.TEXT)
 async def action_telefon(message: types.Message, state: FSMContext):
     await state.update_data(telefon=message.text)
-    await message.answer("Введите ваш e-mail")
+    await message.answer("Укажите Ваш e-mail:")
     await state.set_state(Form.e_mail)
 
 
@@ -31,7 +31,7 @@ async def action_e_mail(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(e_mail=message.text)
-    await message.answer("Введите название организации")
+    await message.answer("От какой компании обращаетесь:")
     await state.set_state(Form.firma)
 
 
@@ -49,7 +49,7 @@ async def action_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
     keyboard = attach_yes_no()
     await message.answer(emoji.emojize(':linked_paperclips:') +
-                         'Хотите приложить к заявке файли или фотографии?', reply_markup=keyboard)
+                         'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
 
 
 @dp.message_handler(state=Form.attach, content_types=['document'])
@@ -84,7 +84,7 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
     await callback_query.message.edit_text(
         emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'),
         reply_markup=keyboard)
-    await callback_query.message.answer("Введите свои Фамилия и Имя")
+    await callback_query.message.answer("Укажите Ваши фамилию и имя:")
     await state.set_state(Form.full_name)
 
 
@@ -153,7 +153,8 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
                                      cont_telefon=data.get('telefon'),
                                      description=data.get('description'),
                                      http_to_attach=dist_url_and_namefile)
-    await callback_query.message.edit_text("сообщение отправлено")
+    await callback_query.message.edit_text("Ваша заявка отправлена. "
+                                           "\nЧтобы направить еще одну заявку, нажмите Меню->start")
     await state.finish()
 
 
@@ -169,8 +170,7 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     await callback_query.message.edit_text(emoji.emojize("Отказ от сохранения.\n\n"
-                                                         ":page_facing_up: Сейчас опишите вашу ситуацию,\n\n"
-                                                         "(приложить файлы можно будет на следующем этапе)"))
+                                                         ":page_facing_up: Расскажите - что у вас случилось?"))
     await state.set_state(Form.description)
 
 
@@ -188,5 +188,4 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
         current_state['firma'], )
     await state.set_state(Form.description)
     await callback_query.message.edit_text(emoji.emojize("Сохранены. \n\n"
-                                                         ":page_facing_up: Сейчас опишите вашу ситуацию,\n\n"
-                                                         "(приложить файлы можно будет на следующем этапе)"))
+                                                         ":page_facing_up: Расскажите - что у вас случилось?"))

@@ -4,7 +4,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 def request_delete_with_data():
     del_btn = InlineKeyboardButton("отменить заявку и стереть свои данные", callback_data="del_user_data")
-    return InlineKeyboardMarkup().add(del_btn)
+    del_btn1 = InlineKeyboardButton("Отмена заявки", callback_data="reject_request")
+    return InlineKeyboardMarkup().add(del_btn).add(del_btn1)
 
 
 def attach_yes_no():
