@@ -25,7 +25,7 @@ async def bot_start(message: types.Message, state: FSMContext):
                              f"Организация: {list_data_client[0][2]}\n"
                              f"e-mail: {list_data_client[0][3]}\n"
                              f"телефон: {list_data_client[0][4]}\n\n"
-                             f"Сейчас опишите вашу ситуацию",
+                             f"Расскажите - что у вас случилось?",
                              reply_markup=keyboard)
         await state.set_state(Form.description)
         await state.update_data(full_name=list_data_client[0][1])
