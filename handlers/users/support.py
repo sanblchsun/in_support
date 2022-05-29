@@ -26,7 +26,7 @@ async def action_telefon(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.e_mail, content_types=types.ContentType.TEXT)
 async def action_e_mail(message: types.Message, state: FSMContext):
-    if not bool(re.search(r"^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", message.text)):
+    if not bool(re.search(r"^[\w\.\+\-]+\@[\w\.\-]+\.[a-z]{2,7}$", message.text)):
         await message.answer('Недействительный email ✉. Повторите')
         return
 
