@@ -147,11 +147,13 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     data = await state.get_data()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
     await callback_query.message.edit_text("Вы нажали 'Отправить сообщение'")
+    message_id = bot.id
     await send_email_with_attachment(full_name=data.get('full_name'),
                                      e_mail=data.get('e_mail'),
                                      firma=data.get('firma'),
                                      cont_telefon=data.get('telefon'),
                                      description=data.get('description'),
+                                     message_id=message_id,
                                      http_to_attach=dist_url_and_namefile)
     await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")

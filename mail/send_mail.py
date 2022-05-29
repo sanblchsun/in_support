@@ -23,6 +23,7 @@ async def send_email_with_attachment(e_mail,
                                      full_name,
                                      cont_telefon,
                                      description,
+                                     message_id,
                                      http_to_attach=None
                                      ):
     """
@@ -89,6 +90,7 @@ async def send_email_with_attachment(e_mail,
                      full_name=full_name,
                      cont_telefon=cont_telefon,
                      description=description,
+                     message_id=message_id,
                      fils_list=files_list)
 
 

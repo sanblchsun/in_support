@@ -25,6 +25,7 @@ def action(e_mail,
            user,
            password,
            database,
+           message_id,
            files_list):
     try:
         con = pymysql.connect(host=host,
@@ -35,14 +36,14 @@ def action(e_mail,
                               cursorclass=pymysql.cursors.DictCursor)
         try:
             with con.cursor() as cursor:
-                select_sql = "SELECT id FROM users WHERE id_telegram='44908032948'"
+                select_sql = f"SELECT id FROM users WHERE id_telegram={message_id}"
                 # select_sql = "SELECT * FROM requests"
                 cursor.execute(select_sql)
                 rows = cursor.fetchall()
                 if len(rows) == 0:
                     sql_users = "INSERT INTO users (id_telegram) VALUES (%s)"
-                    cursor.execute(sql_users, '44908032948')
-                    select_sql = "SELECT id FROM users WHERE id_telegram='44908032948'"
+                    cursor.execute(sql_users, message_id)
+                    select_sql = f"SELECT id FROM users WHERE id_telegram={message_id}"
                     cursor.execute(select_sql)
                     rows = cursor.fetchall()
 
