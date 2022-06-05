@@ -23,6 +23,7 @@ async def send_email_with_attachment(e_mail,
                                      full_name,
                                      cont_telefon,
                                      description,
+                                     priority,
                                      message_id,
                                      http_to_attach=None
                                      ):
@@ -59,7 +60,7 @@ async def send_email_with_attachment(e_mail,
     # msg["To"] = ', '.join(e_mail)
     # msg["cc"] = ', '.join(cc_emails)
 
-    html = get_html(e_mail, firma, full_name, cont_telefon, description)
+    html = get_html(e_mail, firma, full_name, cont_telefon, description, priority)
 
     if html:
         msg.attach(MIMEText(html, "html"))
@@ -90,6 +91,7 @@ async def send_email_with_attachment(e_mail,
                      full_name=full_name,
                      cont_telefon=cont_telefon,
                      description=description,
+                     priority=priority,
                      message_id=message_id,
                      fils_list=files_list)
 

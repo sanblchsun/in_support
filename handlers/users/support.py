@@ -6,8 +6,8 @@ from states.state_form import Form
 from loader import dp, bot
 from base.sqlighter import SQLighter
 from mail.send_mail import send_email_with_attachment
-from keyboards.inline.buttons import attach_yes_no, send_request_yes_no, request_delete_with_data, reject_request, \
-    save_person_data
+from keyboards.inline.buttons import attach_yes_no, send_request_yes_no,\
+    request_delete_with_data, reject_request, save_person_data, buttons_priority
 
 
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
@@ -42,14 +42,15 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
     await message.answer('Сохранить выше введенную информацию, чтобы использовать в следующей заявке\n'
                          'Нажимая на кнопку ДА, вы даете согласие на обработку ваших персональных данных',
                          reply_markup=keyboard)
+    await state.set_state(Form.description)
 
 
 @dp.message_handler(state=Form.description, content_types=['text'])
 async def action_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
-    keyboard = attach_yes_no()
-    await message.answer(emoji.emojize(':linked_paperclips:') +
-                         'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
+    keyword = buttons_priority()
+    await message.answer("Укажите приоритет заявки:", reply_markup=keyword)
+    await state.set_state(Form.priority)
 
 
 @dp.message_handler(state=Form.attach, content_types=['document'])
@@ -72,9 +73,30 @@ async def action_photo(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.attach, commands=['attach'])
 async def end_form(message: types.Message, state: FSMContext):
     keyboard = send_request_yes_no()
+    await state.set_state(Form.send_request)
     await message.answer(emoji.emojize(':envelope:  Заявка готова, отправить?'),
                          reply_markup=keyboard)
-    await state.set_state(Form.send_request)
+
+
+@dp.callback_query_handler(lambda c: c.data in ["low_btn_press",
+                                                "medium_btn_press",
+                                                "high_btn_press",
+                                                "critical_btn_press"],
+                           state="*")
+async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMContext):
+    if callback_query.data == "low_btn_press":
+        await state.update_data(priority="Низкий")
+    elif callback_query.data == "medium_btn_press":
+        await state.update_data(priority="Средний")
+    elif callback_query.data == "high_btn_press":
+        await state.update_data(priority="Высокий")
+    else:
+        await state.update_data(priority="Критический")
+
+    keyboard = attach_yes_no()
+    await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
+                         'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
+    await state.set_state(Form.attach)
 
 
 @dp.callback_query_handler(lambda c: c.data == "create_request", state='*')
@@ -118,7 +140,7 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
 @dp.callback_query_handler(lambda c: c.data == "attach_yes", state='*')
 async def action_request_to_support1(callback_query: types.CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
-    if current_state == 'Form:description':
+    if current_state == 'Form:attach':
         await bot.answer_callback_query(callback_query_id=callback_query.id)
         await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
                                                "   без  текста вложите файлы или сделайте фотограции\n"
@@ -131,7 +153,7 @@ async def action_request_to_support1(callback_query: types.CallbackQuery, state:
 @dp.callback_query_handler(lambda c: c.data == "attach_no", state='*')
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
-    if current_state == 'Form:description':
+    if current_state == 'Form:attach':
         await bot.answer_callback_query(callback_query_id=callback_query.id)
         keyboard = send_request_yes_no()
         await callback_query.message.edit_text(emoji.emojize(":envelope: отправить заявку?"), reply_markup=keyboard)
@@ -147,13 +169,14 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     data = await state.get_data()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
     await callback_query.message.edit_text("Вы нажали 'Отправить сообщение'")
-    message_id = bot.id
+    user_id = callback_query.from_user.id
     await send_email_with_attachment(full_name=data.get('full_name'),
                                      e_mail=data.get('e_mail'),
                                      firma=data.get('firma'),
                                      cont_telefon=data.get('telefon'),
                                      description=data.get('description'),
-                                     message_id=message_id,
+                                     priority=data.get('priority'),
+                                     message_id=user_id,
                                      http_to_attach=dist_url_and_namefile)
     await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")

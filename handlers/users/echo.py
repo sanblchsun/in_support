@@ -25,7 +25,8 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
         await message.answer('Нажмите кнопку')
     elif state_current == 'Form:beginning':
         await message.answer('Нажмите кнопку')
-
+    elif state_current == 'Form:priority':
+        await message.answer("Нажмите на кнопку")
     else:
         await message.answer('Неверный формат')
 

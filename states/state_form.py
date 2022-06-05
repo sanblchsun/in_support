@@ -9,6 +9,7 @@ class Form(StatesGroup):
     firma = State()
     insert_in_base = State()
     description = State()
+    priority = State()
     attach = State()
     end_form = State()
     send_request = State()

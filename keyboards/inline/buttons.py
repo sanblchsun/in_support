@@ -34,3 +34,14 @@ def save_person_data():
     yes_btn = InlineKeyboardButton("ДА", callback_data="save_yes")
     no_btn = InlineKeyboardButton("НЕТ", callback_data="save_no")
     return InlineKeyboardMarkup().add(yes_btn, no_btn)
+
+
+def buttons_priority():
+    low_btn = InlineKeyboardButton("Низкий", callback_data="low_btn_press")
+    medium_btn = InlineKeyboardButton("средний", callback_data="medium_btn_press")
+    high_btn = InlineKeyboardButton("высокий", callback_data="high_btn_press")
+    critical_btn = InlineKeyboardButton("критический", callback_data="critical_btn_press")
+    return InlineKeyboardMarkup().add(low_btn).\
+        add(medium_btn).\
+        add(high_btn).\
+        add(critical_btn)

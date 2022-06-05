@@ -20,6 +20,7 @@ def action(e_mail,
            full_name,
            cont_telefon,
            description,
+           priority,
            host,
            port,
            user,
@@ -47,14 +48,16 @@ def action(e_mail,
                     cursor.execute(select_sql)
                     rows = cursor.fetchall()
 
-                sql_requests = "INSERT INTO requests (user_id, full_name, firma, e_mail, telefon, description, date)" \
-                               " VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                sql_requests = "INSERT INTO requests (user_id, full_name, firma, e_mail," \
+                               " telefon, description, priority, date)" \
+                               " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
                 cursor.execute(sql_requests, (rows[0]['id'],
                                               full_name,
                                               firma,
                                               e_mail,
                                               cont_telefon,
                                               description,
+                                              priority,
                                               datetime.datetime.now()))
                 select_sql1 = "SELECT MAX(id) FROM requests"
                 cursor.execute(select_sql1)
@@ -62,7 +65,7 @@ def action(e_mail,
                 sql_attach = "INSERT INTO attach (id_requests, file) VALUES (%s, %s)"
                 if len(files_list) != 0:
                     for file in files_list:
-                        convert_file = convertToBinary(file)
+                        convert_file = str(file).split('/')[-1]
                         cursor.execute(sql_attach, (rows1[0]['MAX(id)'], convert_file))
                 con.commit()
         finally:
@@ -74,5 +77,4 @@ def action(e_mail,
             str1 = str(files_list[0])
             path = str1[:str1.find('/', str1.find('/')+1)]
             shutil.rmtree(path, ignore_errors=False, onerror=None)
-        pass
 

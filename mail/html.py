@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-def get_html(e_mail, firma, full_name, cont_telefon, description):
+def get_html(e_mail, firma, full_name, cont_telefon, description, priority):
     now_date = datetime.now()
     html = f"""\
         <html>
@@ -50,6 +50,14 @@ def get_html(e_mail, firma, full_name, cont_telefon, description):
                   <td style="padding: 7px; border: 1px solid #dddddd;
                     text-align: left;background: #f9f9f9;">{description}</td>
                 </tr>
+                <tr>
+                  <th style="width: 40%; padding: 7px; border: 1px solid
+                    #dddddd; text-align: left;background: #f9f9f9;">
+                    Приоритет заявки:</th>
+                  <td style="padding: 7px; border: 1px solid #dddddd;
+                    text-align: left;background: #f9f9f9;">{priority}</td>
+                </tr>
+
                 </tbody>
             </table>
             <br>
