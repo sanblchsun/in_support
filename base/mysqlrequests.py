@@ -1,4 +1,5 @@
 import datetime
+import logging
 import shutil
 
 import pymysql
@@ -65,13 +66,16 @@ def action(e_mail,
                 sql_attach = "INSERT INTO attach (id_requests, file) VALUES (%s, %s)"
                 if len(files_list) != 0:
                     for file in files_list:
-                        convert_file = str(file).split('/')[-1]
+                        # convert_file = str(file).split('/')[-1]
+                        convert_file = convertToBinary(file)
                         cursor.execute(sql_attach, (rows1[0]['MAX(id)'], convert_file))
                 con.commit()
+        except Exception as e:
+            logging.info(f'Ошибка запроса sql: {e}')
         finally:
             con.close()
     except Exception as e:
-        print(f'Ошибка запроса sql: {e}')
+        logging.info(f'Ошибка подключения к базе: {e}')
     finally:
         if len(files_list) != 0:
             str1 = str(files_list[0])
