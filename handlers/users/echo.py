@@ -8,7 +8,8 @@ from loader import dp, bot
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
 @dp.message_handler(state=None, content_types=types.ContentTypes.ANY)
 async def bot_echo(message: types.Message):
-    await message.answer('Что бы заполнить и отправить заявку нажмите на ссылку /start')
+    await message.answer('Что бы заполнить и отправить заявку нажмите на ссылку /start \n'
+                         'А что бы отменить заявку на любой стадии выберите из меню /cancel')
 
 
 # Эхо хендлер, куда летят ВСЕ сообщения с указанным состоянием
@@ -22,11 +23,24 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     elif state_current == 'Form:e_mail':
         await message.answer('Введите ваш e-mail')
     elif state_current == 'Form:firma':
-        await message.answer('Нажмите кнопку')
+        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
+							'Нажмите кнопку\n'
+							'или \n'
+                            'для отмены заявки нажмите на ссылку /cancel')
     elif state_current == 'Form:beginning':
-        await message.answer('Нажмите кнопку')
+        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
+							'Нажмите кнопку\n'
+							'или \n'
+                            'для отмены заявки нажмите на ссылку /cancel')
     elif state_current == 'Form:priority':
-        await message.answer("Нажмите на кнопку")
+        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
+							'Нажмите кнопку\n'
+							'или \n'
+                            'для отмены заявки нажмите на ссылку /cancel')
     else:
-        await message.answer('Неверный формат')
+        await message.answer('Неверный формат\n'
+                             'Вы все еще на стадии заполнения заявки.\n\n'
+							'Введите данные\n'
+							'или \n'
+                            'для отмены заявки нажмите на ссылку /cancel')
 

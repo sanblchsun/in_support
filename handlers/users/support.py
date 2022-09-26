@@ -10,6 +10,14 @@ from keyboards.inline.buttons import attach_yes_no, send_request_yes_no,\
     request_delete_with_data, reject_request, save_person_data, buttons_priority
 
 
+@dp.message_handler(state='*', commands=['cancel'])
+async def action_del_user_data(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if str(current_state) != 'None':
+        await message.answer(f"Вы отменили заявку")
+        await state.finish()
+
+
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
 async def action_full_name(message: types.Message, state: FSMContext):
     await state.update_data(full_name=message.text)
@@ -121,6 +129,7 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
     await state.finish()
 
 
+
 @dp.callback_query_handler(lambda c: c.data == "reject_request", state='*')
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
@@ -130,11 +139,12 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
     await state.finish()
 
 
-@dp.callback_query_handler(lambda c: c.data == "del_current_request", state='*')
-async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text("Вы отменили заявку")
-    await state.finish()
+# @dp.callback_query_handler(lambda c: c.data == "del_current_request", state='*')
+# async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
+#     await bot.answer_callback_query(callback_query_id=callback_query.id)
+#     await callback_query.message.edit_text(" ")
+#     await callback_query.message.answer("Вы отменили заявку")
+#     await state.finish()
 
 
 @dp.callback_query_handler(lambda c: c.data == "attach_yes", state='*')
@@ -187,7 +197,10 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
 async def action_request_to_support(callback_query: types.CallbackQuery, state: FSMContext):
     await state.update_data(send_yes_no=True)
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text("Вы передумали отправлять запрос, что бы создать заявку нажмите /start")
+    await callback_query.message.edit_text(
+        "Вы передумали отправлять запрос, что бы создать заявку нажмите /start"
+    )
+    await bot.send_message(chat_id=callback_query.message.chat.id, text="Вы отменили заявку")
     await state.finish()
 
 
