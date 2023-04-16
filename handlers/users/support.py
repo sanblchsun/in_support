@@ -139,12 +139,12 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
     await state.finish()
 
 
-# @dp.callback_query_handler(lambda c: c.data == "del_current_request", state='*')
-# async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
-#     await bot.answer_callback_query(callback_query_id=callback_query.id)
-#     await callback_query.message.edit_text(" ")
-#     await callback_query.message.answer("Вы отменили заявку")
-#     await state.finish()
+@dp.callback_query_handler(lambda c: c.data == "del_current_request", state='*')
+async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.answer_callback_query(callback_query_id=callback_query.id)
+    await callback_query.message.edit_text("________________ ")
+    await callback_query.message.answer("Вы отменили заявку")
+    await state.finish()
 
 
 @dp.callback_query_handler(lambda c: c.data == "attach_yes", state='*')

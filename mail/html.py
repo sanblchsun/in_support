@@ -11,7 +11,6 @@ def get_html(e_mail, firma, full_name, cont_telefon, description, priority):
         <div class="moz-cite-prefix">{now_date},
           {e_mail} пишет:<br>
         </div>
-        <blockquote type="cite" cite="mid:%3Cd6bd09ba951e53786cb8f1c1a2dd4193@swift.generated%3E">
           <meta http-equiv="content-type" content="text/html; charset=UTF-8">
           <p> Поступила новая заявка из Телеграм БОТ формы {firma}.</p>
           <p> Автор оставил такие данные:</p>
@@ -64,7 +63,6 @@ def get_html(e_mail, firma, full_name, cont_telefon, description, priority):
             ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-<br>
             <br>
             Дата создания сообщения: {now_date}</p>
-        </blockquote>
           </body>
         </html>
         """
