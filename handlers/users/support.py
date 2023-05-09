@@ -2,20 +2,73 @@ import re
 import emoji
 from aiogram import types
 from aiogram.dispatcher import FSMContext
+
+from mail.send_mail import send_email_with_attachment
 from states.state_form import Form
 from loader import dp, bot
 from base.sqlighter import SQLighter
-from mail.send_mail import send_email_with_attachment
 from keyboards.inline.buttons import attach_yes_no, send_request_yes_no,\
-    request_delete_with_data, reject_request, save_person_data, buttons_priority
+    reject_request, save_person_data, buttons_priority
+from utils.notify_admins import send_messege_to_admin, is_admin_get_firms
+
 
 
 @dp.message_handler(state='*', commands=['cancel'])
 async def action_del_user_data(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if str(current_state) != 'None':
-        await message.answer(f"Вы отменили заявку")
+        await message.answer("Вы отменили все свои действия")
         await state.finish()
+    else:
+        await message.answer("у Вас нет активных действий")
+
+
+
+@dp.message_handler(state=None, commands=['firms'])
+async def action_firm(message: types.Message, state: FSMContext):
+    usr_id = message.from_user.id
+    usr_id_str = str(usr_id)
+    res_fo_if = is_admin_get_firms(usr_id_str)
+    if res_fo_if:
+        await message.answer(f"Уже есть такой список фирм для уведомления: {res_fo_if}. \n"
+                                 f"Ваши старые записи будут стерты")
+        await state.set_state(Form.update_for_firm)
+    else:
+        await state.set_state(Form.add_for_firm)
+
+    await message.answer("Введите через запятую слова, входящее в название фирм")
+
+
+@dp.message_handler(state=Form.add_for_firm, content_types=types.ContentType.TEXT)
+async def action_for_firm(message: types.Message, state: FSMContext):
+    list_firm = message.text
+    sql_object = SQLighter("base/db.db")
+    sql_object.add_admin(message.from_user.id, list_firm)
+    await message.answer(f"Вы ввели: {list_firm}\n  данные записаны")
+    await state.finish()
+
+
+@dp.message_handler(state=Form.update_for_firm, content_types=types.ContentType.TEXT)
+async def action_for_firm(message: types.Message, state: FSMContext):
+    list_firm = message.text
+    sql_object = SQLighter("base/db.db")
+    sql_object.update_admin(message.from_user.id, list_firm)
+    await message.answer(f"Вы ввели: {list_firm}\n данные записаны")
+    await state.finish()
+
+
+@dp.message_handler(state=None, commands=["unsubscribe"])
+async def action_unsubscribe(message: types.Message, state: FSMContext):
+    usr_id = message.from_user.id
+    usr_id_str = str(usr_id)
+    res_fo_if = is_admin_get_firms(usr_id_str)
+    if res_fo_if:
+        sql_object  = SQLighter("base/db.db")
+        sql_object.del_subscriptions_for_admin(usr_id_str)
+        await message.answer("Вы отписались от всех уведомлений")
+    else:
+        await message.answer("У вас нет подписки на уведомления")
+
 
 
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
@@ -191,6 +244,14 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")
     await state.finish()
+    # Отправить уведомление администратору, если в названии фирмы содержится, что-то из списка его шаблонов.
+    await send_messege_to_admin(dp,
+                                full_name=data.get('full_name'),
+                                e_mail=data.get('e_mail'),
+                                firma=data.get('firma'),
+                                cont_telefon=data.get('telefon'),
+                                description=data.get('description'),
+                                priority=data.get('priority'))
 
 
 @dp.callback_query_handler(lambda c: c.data == "send_no", state=Form.send_request)

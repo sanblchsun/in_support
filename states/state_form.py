@@ -13,3 +13,5 @@ class Form(StatesGroup):
     attach = State()
     end_form = State()
     send_request = State()
+    add_for_firm = State()
+    update_for_firm = State()

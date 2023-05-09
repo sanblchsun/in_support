@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import mimetypes
-import shutil
 import os               # Функции для работы с операционной системой, не зависящие от используемой операционной системы
 import smtplib          # Импортируем библиотеку по работе с SMTP
 import sys
@@ -16,6 +15,7 @@ from email.utils import formatdate
 from mail.html import get_html
 import wget
 from base.controlmysql import controlsql
+
 
 #----------------------------------------------------------------------
 async def send_email_with_attachment(e_mail,
@@ -68,11 +68,11 @@ async def send_email_with_attachment(e_mail,
     files_list = []
     if http_to_attach is not None:
         for key_iter in http_to_attach.keys():
+            path = f'documents/{http_to_attach[key_iter][0]}/{http_to_attach[key_iter][1]}'
             try:
-                path = f'documents/{http_to_attach[key_iter][0]}/{http_to_attach[key_iter][1]}'
                 os.makedirs(path)
             except OSError:
-                logging.info("Создать директорию %s не удалось" % path)
+                logging.info(f"Создать директорию %s не удалось: {path}")
             pahh_file = wget.download(key_iter,
                                       f'documents/{http_to_attach[key_iter][0]}/'
                                       f'{http_to_attach[key_iter][1]}/'

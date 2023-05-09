@@ -2,7 +2,10 @@ from states.state_form import Form
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from loader import dp, bot
+from loader import dp
+from aiogram.dispatcher import FSMContext
+
+
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
