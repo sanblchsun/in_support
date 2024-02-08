@@ -153,7 +153,7 @@ async def action_request_to_support1(callback_query: types.CallbackQuery, state:
     if current_state == 'Form:attach':
         await bot.answer_callback_query(callback_query_id=callback_query.id)
         await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
-                                               "   без  текста вложите файлы или сделайте фотограции\n"
+                                               "   без  текста вложите файлы или сделайте фотографии\n"
                                                "после нажмите на ссылку /attach")
         await state.set_state(Form.attach)
     else:
