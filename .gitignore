@@ -2,9 +2,11 @@ venv/
 documents/
 db.db
 *.ini
+*.ini_
 .env
 docker-compose.yml
 Dockerfile
 test.py
-mail/__pycache__/
 *.pyc
+.idea/
+**/__pycache__

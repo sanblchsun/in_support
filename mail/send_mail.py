@@ -15,6 +15,7 @@ from email.utils import formatdate
 from mail.html import get_html
 import wget
 from base.controlmysql import controlsql
+from datetime import datetime, time
 
 
 #----------------------------------------------------------------------
@@ -48,11 +49,14 @@ async def send_email_with_attachment(e_mail,
     FROM = cfg.get("smtp", "from")
     password = cfg.get("smtp", "passwd")
     to_addrs = cfg.get("smtp", "to_addrs")
+    to_addrs1 = cfg.get("smtp", "to_addrs1")
+    time_start = cfg.get("smtp", "time_start")
+    time_end = cfg.get("smtp", "time_end")
 
     # create the message
     msg = MIMEMultipart()
     msg["From"] = FROM
-    msg["To"] = e_mail
+    msg["To"] = f"{to_addrs}; {to_addrs1}"
     msg['Reply-To'] = e_mail
     msg["Subject"] = "Новая заявка"
     msg["Date"] = formatdate(localtime=True)
@@ -80,10 +84,25 @@ async def send_email_with_attachment(e_mail,
             files_list.append(pahh_file)
         process_attachement(msg, files_list)
 
+    # obj_time_start = time.fromisoformat(time_start)
+    # obj_time_end = time.fromisoformat(time_end)
+    # res_now = datetime.now().time()
+    # if obj_time_start <= obj_time_end:
+    #     if obj_time_start <= res_now <= obj_time_end:
+    #         to_addrs0 = [to_addrs, to_addrs1]
+    #     else:
+    #         to_addrs0 = [to_addrs]
+    # else:
+    #     if obj_time_start <= res_now or res_now <= obj_time_end:
+    #        to_addrs0 = [to_addrs, to_addrs1]
+    #    else:
+    #        to_addrs0 = [to_addrs]
+
+    to_addrs0 = [to_addrs, to_addrs1]
     server = smtplib.SMTP(host)
     server.starttls()
     server.login(FROM, password)
-    server.sendmail(FROM, to_addrs, msg.as_string())
+    server.sendmail(FROM, to_addrs0, msg.as_string())
     server.quit()
 
     await controlsql(e_mail=e_mail,
@@ -148,6 +167,8 @@ if __name__ == '__main__':
                                firma="фирма",
                                full_name='Иван',
                                cont_telefon='49834889',
-                               description='Ура!')
+                               description='Ура!',
+                               priority="Низкий",
+                               message_id=1111111)
     )
     loop.close()

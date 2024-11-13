@@ -62,7 +62,8 @@ class SQLighter:
 
 if __name__ == '__main__':
     sql_object = SQLighter('db.db')
-    res = sql_object.get_admins_firms(2001412076)
+"""в скобках указать из телеграмм ID админа""" 
+    res = sql_object.get_admins_firms()
     res1 = res[0][0].split(",")
     print(res1)
     for i in res1:
