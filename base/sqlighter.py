@@ -60,11 +60,11 @@ class SQLighter:
         self.connection.close()
 
 
-if __name__ == '__main__':
-    sql_object = SQLighter('db.db')
-"""в скобках указать из телеграмм ID админа""" 
-    res = sql_object.get_admins_firms()
-    res1 = res[0][0].split(",")
-    print(res1)
-    for i in res1:
-        print(i.lower().strip())
+# if __name__ == '__main__':
+#     sql_object = SQLighter('db.db')
+# """в скобках указать из телеграмм ID админа"""
+#     res = sql_object.get_admins_firms()
+#     res1 = res[0][0].split(",")
+#     print(res1)
+#     for i in res1:
+#         print(i.lower().strip())

@@ -50,13 +50,38 @@ async def send_email_with_attachment(e_mail,
     password = cfg.get("smtp", "passwd")
     to_addrs = cfg.get("smtp", "to_addrs")
     to_addrs1 = cfg.get("smtp", "to_addrs1")
-    time_start = cfg.get("smtp", "time_start")
-    time_end = cfg.get("smtp", "time_end")
+    time_start = cfg.get("time", "time_start")
+    time_end = cfg.get("time", "time_end")
+    firma_filter = cfg.get("filter", "firma_filter")
+
+
+    if firma == firma_filter:
+        obj_time_start = time.fromisoformat(time_start)
+        obj_time_end = time.fromisoformat(time_end)
+        res_now = datetime.now().time()
+        if obj_time_start <= obj_time_end:
+            if obj_time_start <= res_now <= obj_time_end:
+                to_addrs0 = [to_addrs, to_addrs1]
+                msg_To = f"{to_addrs}; {to_addrs1}"
+            else:
+                to_addrs0 = [to_addrs]
+                msg_To = f"{to_addrs}"
+        else:
+            if obj_time_start <= res_now or res_now <= obj_time_end:
+                to_addrs0 = [to_addrs, to_addrs1]
+                msg_To = f"{to_addrs}; {to_addrs1}"
+            else:
+                to_addrs0 = [to_addrs]
+                msg_To = f"{to_addrs}"
+    else:
+        to_addrs0 = [to_addrs]
+        msg_To = f"{to_addrs}"
+
 
     # create the message
     msg = MIMEMultipart()
     msg["From"] = FROM
-    msg["To"] = f"{to_addrs}; {to_addrs1}"
+    msg["To"] = msg_To
     msg['Reply-To'] = e_mail
     msg["Subject"] = "Новая заявка"
     msg["Date"] = formatdate(localtime=True)
@@ -84,21 +109,7 @@ async def send_email_with_attachment(e_mail,
             files_list.append(pahh_file)
         process_attachement(msg, files_list)
 
-    # obj_time_start = time.fromisoformat(time_start)
-    # obj_time_end = time.fromisoformat(time_end)
-    # res_now = datetime.now().time()
-    # if obj_time_start <= obj_time_end:
-    #     if obj_time_start <= res_now <= obj_time_end:
-    #         to_addrs0 = [to_addrs, to_addrs1]
-    #     else:
-    #         to_addrs0 = [to_addrs]
-    # else:
-    #     if obj_time_start <= res_now or res_now <= obj_time_end:
-    #        to_addrs0 = [to_addrs, to_addrs1]
-    #    else:
-    #        to_addrs0 = [to_addrs]
 
-    to_addrs0 = [to_addrs, to_addrs1]
     server = smtplib.SMTP(host)
     server.starttls()
     server.login(FROM, password)
@@ -164,7 +175,7 @@ def attach_file(msg, filepath):                             # Функция п�
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
-                               firma="фирма",
+                               firma="ООО Комторггрупп",
                                full_name='Иван',
                                cont_telefon='49834889',
                                description='Ура!',
