@@ -53,6 +53,8 @@ async def send_email_with_attachment(e_mail,
     time_start = cfg.get("time", "time_start")
     time_end = cfg.get("time", "time_end")
     firma_filter = cfg.get("filter", "firma_filter").split(",")
+    # убрать пробелы в начале и конце элементов списка firma_filter
+    firma_filter = [i.strip() for i in firma_filter]
 
     if type(firma_filter) is list and len(firma_filter) <= 100:
         for i_pattern in firma_filter:
