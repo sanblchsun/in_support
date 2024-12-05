@@ -52,30 +52,33 @@ async def send_email_with_attachment(e_mail,
     to_addrs1 = cfg.get("smtp", "to_addrs1")
     time_start = cfg.get("time", "time_start")
     time_end = cfg.get("time", "time_end")
-    firma_filter = cfg.get("filter", "firma_filter")
+    firma_filter = cfg.get("filter", "firma_filter").split(",")
 
-
-    if firma == firma_filter:
-        obj_time_start = time.fromisoformat(time_start)
-        obj_time_end = time.fromisoformat(time_end)
-        res_now = datetime.now().time()
-        if obj_time_start <= obj_time_end:
-            if obj_time_start <= res_now <= obj_time_end:
-                to_addrs0 = [to_addrs, to_addrs1]
-                msg_To = f"{to_addrs}; {to_addrs1}"
-            else:
-                to_addrs0 = [to_addrs]
-                msg_To = f"{to_addrs}"
-        else:
-            if obj_time_start <= res_now or res_now <= obj_time_end:
-                to_addrs0 = [to_addrs, to_addrs1]
-                msg_To = f"{to_addrs}; {to_addrs1}"
-            else:
-                to_addrs0 = [to_addrs]
-                msg_To = f"{to_addrs}"
+    if type(firma_filter) is list and len(firma_filter) <= 100:
+        for i_pattern in firma_filter:
+            if i_pattern.lower() in firma.lower():
+                obj_time_start = time.fromisoformat(time_start)
+                obj_time_end = time.fromisoformat(time_end)
+                res_now = datetime.now().time()
+                if obj_time_start <= obj_time_end:
+                    if obj_time_start <= res_now <= obj_time_end:
+                        to_addrs0 = [to_addrs, to_addrs1]
+                        msg_To = f"{to_addrs}; {to_addrs1}"
+                    else:
+                        to_addrs0 = [to_addrs]
+                        msg_To = f"{to_addrs}"
+                else:
+                    if obj_time_start <= res_now or res_now <= obj_time_end:
+                        to_addrs0 = [to_addrs, to_addrs1]
+                        msg_To = f"{to_addrs}; {to_addrs1}"
+                    else:
+                        to_addrs0 = [to_addrs]
+                        msg_To = f"{to_addrs}"
+                break
     else:
         to_addrs0 = [to_addrs]
         msg_To = f"{to_addrs}"
+
 
 
     # create the message
@@ -116,14 +119,14 @@ async def send_email_with_attachment(e_mail,
     server.sendmail(FROM, to_addrs0, msg.as_string())
     server.quit()
 
-    await controlsql(e_mail=e_mail,
-                     firma=firma,
-                     full_name=full_name,
-                     cont_telefon=cont_telefon,
-                     description=description,
-                     priority=priority,
-                     message_id=message_id,
-                     fils_list=files_list)
+    # await controlsql(e_mail=e_mail,
+    #                  firma=firma,
+    #                  full_name=full_name,
+    #                  cont_telefon=cont_telefon,
+    #                  description=description,
+    #                  priority=priority,
+    #                  message_id=message_id,
+    #                  fils_list=files_list)
 
 
     #==========================================================================================================================
