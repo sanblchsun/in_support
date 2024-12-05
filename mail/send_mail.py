@@ -119,14 +119,14 @@ async def send_email_with_attachment(e_mail,
     server.sendmail(FROM, to_addrs0, msg.as_string())
     server.quit()
 
-    # await controlsql(e_mail=e_mail,
-    #                  firma=firma,
-    #                  full_name=full_name,
-    #                  cont_telefon=cont_telefon,
-    #                  description=description,
-    #                  priority=priority,
-    #                  message_id=message_id,
-    #                  fils_list=files_list)
+    await controlsql(e_mail=e_mail,
+                     firma=firma,
+                     full_name=full_name,
+                     cont_telefon=cont_telefon,
+                     description=description,
+                     priority=priority,
+                     message_id=message_id,
+                     fils_list=files_list)
 
 
     #==========================================================================================================================
