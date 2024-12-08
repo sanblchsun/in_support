@@ -249,14 +249,13 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     else:
         await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")
-        # Отправить уведомление администратору, если в названии фирмы содержится, что-то из списка его шаблонов.
-        await send_messege_to_admin(dp,
-                                    full_name=data.get('full_name'),
-                                    e_mail=data.get('e_mail'),
-                                    firma=data.get('firma'),
-                                    cont_telefon=data.get('telefon'),
-                                    description=data.get('description'),
-                                    priority=data.get('priority'))
+        # await send_messege_to_admin(dp,
+        #                             full_name=data.get('full_name'),
+        #                             e_mail=data.get('e_mail'),
+        #                             firma=data.get('firma'),
+        #                             cont_telefon=data.get('telefon'),
+        #                             description=data.get('description'),
+        #                             priority=data.get('priority'))
 
     await state.finish()
 
