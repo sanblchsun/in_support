@@ -5,6 +5,7 @@ import os               # Функции для работы с операцио
 import smtplib          # Импортируем библиотеку по работе с SMTP
 import sys
 from configparser import ConfigParser
+from copy import deepcopy
 from email import encoders
 from email.mime.audio import MIMEAudio
 from email.mime.image import MIMEImage
@@ -12,11 +13,25 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
+from pickle import GLOBAL
+
 from mail.html import get_html
 import wget
 from base.controlmysql import controlsql
 from datetime import datetime, time
 
+def _check_filters(firma_filter_def, firma_def, to_addrs_def, to_addrs1_def):
+    if firma_filter_def:
+        firma_filter_def = firma_filter_def.split(",")
+        firma_filter_def = [i.strip() for i in firma_filter_def]
+        if type(firma_filter_def) is list and len(firma_filter_def) <= 100:
+            for i_pattern in firma_filter_def:
+                if i_pattern.lower() in firma_def.lower():
+                    return [to_addrs_def, to_addrs1_def], f"{to_addrs_def}; {to_addrs1_def}"
+        else:
+            logging.info("в файле email.ini возможно строка firma_filter = пустая")
+
+    return to_addrs_def, f"{to_addrs_def}"
 
 #----------------------------------------------------------------------
 async def send_email_with_attachment(e_mail,
@@ -31,7 +46,7 @@ async def send_email_with_attachment(e_mail,
     """
     Send an email with an attachment
     """
-
+    val_error = 0
     base_path = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_path, "email.ini")
     header = 'Content-Disposition', 'attachment; filename="%s"' % http_to_attach
@@ -52,36 +67,34 @@ async def send_email_with_attachment(e_mail,
     to_addrs1 = cfg.get("smtp", "to_addrs1")
     time_start = cfg.get("time", "time_start")
     time_end = cfg.get("time", "time_end")
-    firma_filter = cfg.get("filter", "firma_filter").split(",")
-    # убрать пробелы в начале и конце элементов списка firma_filter
-    firma_filter = [i.strip() for i in firma_filter]
+    firma_filter = cfg.get("filter", "firma_filter")
+    if not to_addrs:
+        logging.info("Не указан основной адреса получателей в файле email.ini")
+        val_error = 1
+        return val_error
 
-    if type(firma_filter) is list and len(firma_filter) <= 100:
-        for i_pattern in firma_filter:
-            if i_pattern.lower() in firma.lower():
-                obj_time_start = time.fromisoformat(time_start)
-                obj_time_end = time.fromisoformat(time_end)
-                res_now = datetime.now().time()
-                if obj_time_start <= obj_time_end:
-                    if obj_time_start <= res_now <= obj_time_end:
-                        to_addrs0 = [to_addrs, to_addrs1]
-                        msg_To = f"{to_addrs}; {to_addrs1}"
-                    else:
-                        to_addrs0 = [to_addrs]
-                        msg_To = f"{to_addrs}"
-                else:
-                    if obj_time_start <= res_now or res_now <= obj_time_end:
-                        to_addrs0 = [to_addrs, to_addrs1]
-                        msg_To = f"{to_addrs}; {to_addrs1}"
-                    else:
-                        to_addrs0 = [to_addrs]
-                        msg_To = f"{to_addrs}"
-                break
-    else:
-        to_addrs0 = [to_addrs]
-        msg_To = f"{to_addrs}"
+    to_addrs0 = to_addrs
+    msg_To = f"{to_addrs}"
 
 
+    try:
+        obj_time_start = time.fromisoformat(time_start)
+        obj_time_end = time.fromisoformat(time_end)
+        res_now = datetime.now().time()
+        if obj_time_start <= obj_time_end:
+            if obj_time_start <= res_now <= obj_time_end:
+                to_addrs0, msg_To = _check_filters(firma_filter_def=deepcopy(firma_filter),
+                                                   firma_def=firma,
+                                                   to_addrs_def=to_addrs0,
+                                                   to_addrs1_def=to_addrs1)
+        else:
+            if obj_time_start <= res_now or res_now <= obj_time_end:
+                to_addrs0, msg_To = _check_filters(firma_filter_def=deepcopy(firma_filter),
+                                                   firma_def=firma,
+                                                   to_addrs_def=to_addrs0,
+                                                   to_addrs1_def=to_addrs1)
+    except ValueError as e:
+        logging.info(f"Ошибка при преобразовании времени: {e}, который указан в файле email.ini")
 
     # create the message
     msg = MIMEMultipart()
@@ -113,24 +126,32 @@ async def send_email_with_attachment(e_mail,
                                       f'{http_to_attach[key_iter][2]}')
             files_list.append(pahh_file)
         process_attachement(msg, files_list)
+    try:
+        server = smtplib.SMTP(host)
+    except Exception as e:
+        logging.info(f"Ошибка при создании сервера SMTP: {e}")
+        val_error = 2
+        return val_error
+    try:
+        server.starttls()
+        server.login(FROM, password)
+        server.sendmail(FROM, to_addrs0, msg.as_string())
+    except Exception as e:
+        logging.info(f"Ошибка при отправке письма: {e}")
+        val_error = 3
+    finally:
+        server.quit()
 
+    # await controlsql(e_mail=e_mail,
+    #                  firma=firma,
+    #                  full_name=full_name,
+    #                  cont_telefon=cont_telefon,
+    #                  description=description,
+    #                  priority=priority,
+    #                  message_id=message_id,
+    #                  fils_list=files_list)
 
-    server = smtplib.SMTP(host)
-    server.starttls()
-    server.login(FROM, password)
-    server.sendmail(FROM, to_addrs0, msg.as_string())
-    server.quit()
-
-    await controlsql(e_mail=e_mail,
-                     firma=firma,
-                     full_name=full_name,
-                     cont_telefon=cont_telefon,
-                     description=description,
-                     priority=priority,
-                     message_id=message_id,
-                     fils_list=files_list)
-
-
+    return val_error
     #==========================================================================================================================
 
 def process_attachement(msg, files):                        # Функция по обработке списка, добавляемых к сообщению файлов
@@ -174,13 +195,14 @@ def attach_file(msg, filepath):                             # Функция п�
         encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
 
     file.add_header('Content-Disposition', 'attachment', filename=filename) # Добавляем заголовки
-    msg.attach(file)                                        # Присоединяем файл к сообщению
+    msg.attach(file)
+
 
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
-                               firma="ООО Комторггрупп",
+                               firma="ООО kjhdk",
                                full_name='Иван',
                                cont_telefon='49834889',
                                description='Ура!',

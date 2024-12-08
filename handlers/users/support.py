@@ -233,7 +233,7 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     dist_url_and_namefile = data.get('dist_url_and_namefile')
     await callback_query.message.edit_text("Вы нажали 'Отправить сообщение'")
     user_id = callback_query.from_user.id
-    await send_email_with_attachment(full_name=data.get('full_name'),
+    ident_error = await send_email_with_attachment(full_name=data.get('full_name'),
                                      e_mail=data.get('e_mail'),
                                      firma=data.get('firma'),
                                      cont_telefon=data.get('telefon'),
@@ -241,17 +241,24 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
                                      priority=data.get('priority'),
                                      message_id=user_id,
                                      http_to_attach=dist_url_and_namefile)
-    await callback_query.message.edit_text("Ваша заявка отправлена. "
+    if ident_error:
+        await callback_query.message.edit_text(
+            f"Ошибка при отправке заявки: {ident_error}. "
+            f"Что то пошло не так, обратитесь к поставщику продукта"
+        )
+    else:
+        await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")
+        # Отправить уведомление администратору, если в названии фирмы содержится, что-то из списка его шаблонов.
+        await send_messege_to_admin(dp,
+                                    full_name=data.get('full_name'),
+                                    e_mail=data.get('e_mail'),
+                                    firma=data.get('firma'),
+                                    cont_telefon=data.get('telefon'),
+                                    description=data.get('description'),
+                                    priority=data.get('priority'))
+
     await state.finish()
-    # Отправить уведомление администратору, если в названии фирмы содержится, что-то из списка его шаблонов.
-    await send_messege_to_admin(dp,
-                                full_name=data.get('full_name'),
-                                e_mail=data.get('e_mail'),
-                                firma=data.get('firma'),
-                                cont_telefon=data.get('telefon'),
-                                description=data.get('description'),
-                                priority=data.get('priority'))
 
 
 @dp.callback_query_handler(lambda c: c.data == "send_no", state=Form.send_request)
