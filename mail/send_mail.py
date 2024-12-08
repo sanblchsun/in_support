@@ -49,7 +49,7 @@ async def send_email_with_attachment(e_mail,
     val_error = 0
     base_path = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_path, "email.ini")
-    header = 'Content-Disposition', 'attachment; filename="%s"' % http_to_attach
+    # header = 'Content-Disposition', 'attachment; filename="%s"' % http_to_attach
 
     # get the config
     if os.path.exists(config_path):
@@ -113,7 +113,7 @@ async def send_email_with_attachment(e_mail,
         msg.attach(MIMEText(html, "html"))
 
     files_list = []
-    if http_to_attach is not None:
+    if http_to_attach is not None and http_to_attach:
         for key_iter in http_to_attach.keys():
             path = f'documents/{http_to_attach[key_iter][0]}/{http_to_attach[key_iter][1]}'
             try:
