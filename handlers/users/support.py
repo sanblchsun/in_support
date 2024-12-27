@@ -233,7 +233,7 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     dist_url_and_namefile = data.get('dist_url_and_namefile')
     await callback_query.message.edit_text("Вы нажали 'Отправить сообщение'")
     user_id = callback_query.from_user.id
-    ident_error = await send_email_with_attachment(full_name=data.get('full_name'),
+    ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
                                      e_mail=data.get('e_mail'),
                                      firma=data.get('firma'),
                                      cont_telefon=data.get('telefon'),
@@ -249,13 +249,14 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     else:
         await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")
-        # await send_messege_to_admin(dp,
-        #                             full_name=data.get('full_name'),
-        #                             e_mail=data.get('e_mail'),
-        #                             firma=data.get('firma'),
-        #                             cont_telefon=data.get('telefon'),
-        #                             description=data.get('description'),
-        #                             priority=data.get('priority'))
+        if check_send_bot:
+            await send_messege_to_admin(dp,
+                                     full_name=data.get('full_name'),
+                                     e_mail=data.get('e_mail'),
+                                     firma=data.get('firma'),
+                                     cont_telefon=data.get('telefon'),
+                                     description=data.get('description'),
+                                     priority=data.get('priority'))
 
     await state.finish()
 

@@ -47,6 +47,7 @@ async def send_email_with_attachment(e_mail,
     Send an email with an attachment
     """
     val_error = 0
+    check_send_bot = False
     base_path = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_path, "email.ini")
     # header = 'Content-Disposition', 'attachment; filename="%s"' % http_to_attach
@@ -87,12 +88,14 @@ async def send_email_with_attachment(e_mail,
                                                    firma_def=firma,
                                                    to_addrs_def=to_addrs0,
                                                    to_addrs1_def=to_addrs1)
+                check_send_bot = True
         else:
             if obj_time_start <= res_now or res_now <= obj_time_end:
                 to_addrs0, msg_To = _check_filters(firma_filter_def=deepcopy(firma_filter),
                                                    firma_def=firma,
                                                    to_addrs_def=to_addrs0,
                                                    to_addrs1_def=to_addrs1)
+                check_send_bot = True
     except ValueError as e:
         logging.info(f"Ошибка при преобразовании времени: {e}, который указан в файле email.ini")
 
@@ -151,7 +154,7 @@ async def send_email_with_attachment(e_mail,
                      message_id=message_id,
                      fils_list=files_list)
 
-    return val_error
+    return val_error, check_send_bot
     #==========================================================================================================================
 
 def process_attachement(msg, files):                        # Функция по обработке списка, добавляемых к сообщению файлов

@@ -54,22 +54,15 @@ async def send_messege_to_admin(dp: Dispatcher,
     #         <a href="tg://user?id=123456789">встроенное упоминание пользователя</a>\
     #         <pre>предварительно отформатированный блок кода фиксированной ширины</pre>'
 
-    for admin in ADMINS:
-        res_for_if = is_admin_get_firms(admin)
-        if res_for_if:
-            for pattern in res_for_if:
-                pattern_tmp = str(pattern).lower().strip()
-                firma_tmp = str(firma).lower().strip()
-                if pattern_tmp in firma_tmp:
-                    html = \
-                        f"<i><b>Компания: </b></i>\n<code>{firma}</code>\n" \
-                        f"<i><b>Фамилия Имя: </b></i>\n<code>{full_name}</code>\n" \
-                        f"<i><b>Контактный телефон: </b>\n</i><code>{cont_telefon}</code>\n" \
-                        f"<i><b>E-mail адрес: </b></i>\n<code>{e_mail}</code>\n" \
-                        f"<i><b>Описание проблемы: </b></i>\n<code>{description}</code>\n" \
-                        f"<i><b>Приоритет заявки: </b></i>\n<code>{priority}</code>\n"
+    html = f"""
+           <i><b>Компания: </b></i>\n<code>{firma}</code>\n
+           <i><b>Фамилия Имя: </b></i>\n<code>{full_name}</code>\n
+           <i><b>Контактный телефон: </b>\n</i><code>{cont_telefon}</code>\n
+           <i><b>E-mail адрес: </b></i>\n<code>{e_mail}</code>\n
+           <i><b>Описание проблемы: </b></i>\n<code>{description}</code>\n
+           <i><b>Приоритет заявки: </b></i>\n<code>{priority}</code>\n"""
 
-                    await dp.bot.send_message(admin, html, parse_mode=types.ParseMode.HTML)
-                    logging.info(f'html: send, pattern_tmp: {pattern_tmp}, firma_tmp: {firma_tmp}, admin: {admin}, ADMINS: {ADMINS}')
+    await dp.bot.send_message(chat_id=-4729733720, text=html, parse_mode=types.ParseMode.HTML)
+    logging.info(f'html: send, pattern_tmp: {pattern_tmp}, firma_tmp: {firma_tmp}, admin: {admin}, ADMINS: {ADMINS}')
 
 

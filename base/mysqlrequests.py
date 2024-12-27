@@ -60,15 +60,15 @@ def action(e_mail,
                                               description,
                                               priority,
                                               datetime.datetime.now()))
-                select_sql1 = "SELECT MAX(id) FROM requests"
-                cursor.execute(select_sql1)
-                rows1 = cursor.fetchall()
-                sql_attach = "INSERT INTO attach (id_requests, file) VALUES (%s, %s)"
-                if len(files_list) != 0:
-                    for file in files_list:
-                        # convert_file = str(file).split('/')[-1]
-                        convert_file = convertToBinary(file)
-                        cursor.execute(sql_attach, (rows1[0]['MAX(id)'], convert_file))
+                # select_sql1 = "SELECT MAX(id) FROM requests"
+                # cursor.execute(select_sql1)
+                # rows1 = cursor.fetchall()
+                # sql_attach = "INSERT INTO attach (id_requests, file) VALUES (%s, %s)"
+                # if len(files_list) != 0:
+                    # for file in files_list:
+                        ## convert_file = str(file).split('/')[-1]
+                        # convert_file = convertToBinary(file)
+                        # cursor.execute(sql_attach, (rows1[0]['MAX(id)'], convert_file))
                 con.commit()
         except Exception as e:
             logging.info(f'Ошибка запроса sql: {e}')
