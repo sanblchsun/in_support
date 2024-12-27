@@ -88,14 +88,16 @@ async def send_email_with_attachment(e_mail,
                                                    firma_def=firma,
                                                    to_addrs_def=to_addrs0,
                                                    to_addrs1_def=to_addrs1)
-                check_send_bot = True
+                if type(to_addrs0) is list:
+                    check_send_bot = True
         else:
             if obj_time_start <= res_now or res_now <= obj_time_end:
                 to_addrs0, msg_To = _check_filters(firma_filter_def=deepcopy(firma_filter),
                                                    firma_def=firma,
                                                    to_addrs_def=to_addrs0,
                                                    to_addrs1_def=to_addrs1)
-                check_send_bot = True
+                if type(to_addrs0) is list:
+                    check_send_bot = True
     except ValueError as e:
         logging.info(f"Ошибка при преобразовании времени: {e}, который указан в файле email.ini")
 
