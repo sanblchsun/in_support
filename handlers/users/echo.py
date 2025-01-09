@@ -1,22 +1,25 @@
 from states.state_form import Form
-
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from loader import dp
 from aiogram.dispatcher import FSMContext
-
+from aiogram.dispatcher.filters.builtin import ChatTypeFilter
 
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
-@dp.message_handler(state=None, content_types=types.ContentTypes.ANY)
+@dp.message_handler(ChatTypeFilter(chat_type=types.ChatType.PRIVATE),
+                    state=None,
+                    content_types=types.ContentTypes.ANY)
 async def bot_echo(message: types.Message):
     await message.answer('Что бы заполнить и отправить заявку нажмите на ссылку /start \n'
                          'А что бы отменить заявку на любой стадии выберите из меню /cancel')
 
 
 # Эхо хендлер, куда летят ВСЕ сообщения с указанным состоянием
-@dp.message_handler(state="*", content_types=types.ContentTypes.ANY)
+@dp.message_handler(ChatTypeFilter(chat_type=types.ChatType.PRIVATE),
+                    state="*",
+                    content_types=types.ContentTypes.ANY)
 async def bot_echo_all(message: types.Message, state: FSMContext):
     state_current = await state.get_state()
     if state_current == 'Form:full_name':
