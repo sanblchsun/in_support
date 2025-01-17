@@ -62,7 +62,7 @@ async def send_messege_to_admin(dp: Dispatcher,
            <i><b>Описание проблемы: </b></i>\n<code>{description}</code>\n
            <i><b>Приоритет заявки: </b></i>\n<code>{priority}</code>\n"""
 
-    await dp.bot.send_message(chat_id=-4729733720, text=html, parse_mode=types.ParseMode.HTML)
+    await dp.bot.send_message(chat_id=-1002462760107, text=html, parse_mode=types.ParseMode.HTML)
     # logging.info(f'html: send, pattern_tmp: {pattern_tmp}, firma_tmp: {firma_tmp}, admin: {admin}, ADMINS: {ADMINS}')
 
 

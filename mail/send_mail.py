@@ -147,14 +147,14 @@ async def send_email_with_attachment(e_mail,
     finally:
         server.quit()
 
-    await controlsql(e_mail=e_mail,
-                     firma=firma,
-                     full_name=full_name,
-                     cont_telefon=cont_telefon,
-                     description=description,
-                     priority=priority,
-                     message_id=message_id,
-                     fils_list=files_list)
+    # await controlsql(e_mail=e_mail,
+    #                  firma=firma,
+    #                  full_name=full_name,
+    #                  cont_telefon=cont_telefon,
+    #                  description=description,
+    #                  priority=priority,
+    #                  message_id=message_id,
+    #                  fils_list=files_list)
 
     return val_error, check_send_bot
     #==========================================================================================================================
@@ -205,8 +205,7 @@ def attach_file(msg, filepath):                             # Функция п�
 
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
+    asyncio.run(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
                                firma="ООО kjhdk",
                                full_name='Иван',
                                cont_telefon='49834889',
@@ -214,4 +213,4 @@ if __name__ == '__main__':
                                priority="Низкий",
                                message_id=1111111)
     )
-    loop.close()
+

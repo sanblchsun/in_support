@@ -10,6 +10,7 @@ from base.sqlighter import SQLighter
 from keyboards.inline.buttons import attach_yes_no, send_request_yes_no,\
     reject_request, save_person_data, buttons_priority
 from utils.notify_admins import send_messege_to_admin, is_admin_get_firms
+from module1c import action
 
 
 
@@ -249,6 +250,9 @@ async def action_request_to_support(callback_query: types.CallbackQuery, state: 
     else:
         await callback_query.message.edit_text("Ваша заявка отправлена. "
                                            "\nЧтобы направить еще одну заявку, нажмите Меню->start")
+
+        await action.set_brom(description=data.get('description'))
+
         if check_send_bot:
             await send_messege_to_admin(dp,
                                      full_name=data.get('full_name'),
