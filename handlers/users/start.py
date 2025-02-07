@@ -1,6 +1,7 @@
-
+import random
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
+from aiogram.types import InputFile, ReplyKeyboardRemove
 from base.sqlighter import SQLighter
 from loader import dp
 from aiogram.dispatcher import FSMContext
@@ -19,19 +20,26 @@ async def bot_start(message: types.Message, state: FSMContext):
     list_data_client = sql_object.get_client(message.from_user.id)
     if bool(len(list_data_client)):
         keyboard = request_delete_with_data()
-        await message.answer(f"Привет, {message.from_user.full_name}!\n\n"
+        try:
+            i = random.randint(1,5)
+            await message.answer_photo(photo=InputFile(f'img/supp{i}.jpeg'), reply_markup=ReplyKeyboardRemove())
+        except FileNotFoundError as e:
+            pass
+        msg = await message.answer(f"Привет, {message.from_user.full_name}!\n\n"
                              f"Ваши данные для автозаполнения формы заявки:\n\n"
                              f"ФИО: {list_data_client[0][1]}\n"
                              f"Организация: {list_data_client[0][2]}\n"
                              f"e-mail: {list_data_client[0][3]}\n"
-                             f"телефон: {list_data_client[0][4]}\n\n"
-                             f"Расскажите - что у вас случилось?",
+                             f"телефон: {list_data_client[0][4]}",
                              reply_markup=keyboard)
+        await state.update_data(message_for_edit=msg.message_id)
+        await message.answer("Расскажите - что у вас случилось?")
         await state.set_state(Form.description)
         await state.update_data(full_name=list_data_client[0][1])
         await state.update_data(firma=list_data_client[0][2])
         await state.update_data(e_mail=list_data_client[0][3])
         await state.update_data(telefon=list_data_client[0][4])
+        await message.delete()
     else:
         keyboard = request_or_reject()
         await message.answer(f"Привет, {message.from_user.full_name}!",

@@ -1,5 +1,5 @@
-import emoji
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
 
 
 def request_delete_with_data():
@@ -9,15 +9,15 @@ def request_delete_with_data():
 
 
 def attach_yes_no():
-    yes_btn = InlineKeyboardButton("ДА", callback_data="attach_yes")
     no_btn = InlineKeyboardButton("НЕТ", callback_data="attach_no")
-    return InlineKeyboardMarkup().add(yes_btn, no_btn)
+    yes_btn = InlineKeyboardButton("ДА", callback_data="attach_yes")
+    return InlineKeyboardMarkup().add(no_btn, yes_btn)
 
 
 def send_request_yes_no():
-    yes_btn = InlineKeyboardButton(" ДА", callback_data="send_yes")
     no_btn = InlineKeyboardButton("НЕТ", callback_data="send_no")
-    return InlineKeyboardMarkup().add(yes_btn, no_btn)
+    yes_btn = InlineKeyboardButton(" ДА", callback_data="send_yes")
+    return InlineKeyboardMarkup().add(no_btn, yes_btn)
 
 
 def request_or_reject():
@@ -45,3 +45,7 @@ def buttons_priority():
         add(medium_btn).\
         add(high_btn).\
         add(critical_btn)
+
+def btn_get_status():
+    btn = InlineKeyboardButton("Узнайте статус заявки", callback_data='btn_get_status')
+    return InlineKeyboardMarkup().add(btn)

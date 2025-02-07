@@ -3,6 +3,7 @@ from datetime import datetime
 
 def get_html(e_mail, firma, full_name, cont_telefon, description, priority):
     now_date = datetime.now()
+    now_date = now_date.replace(second=0, microsecond=0)
     html = f"""\
         <html>
           <body>

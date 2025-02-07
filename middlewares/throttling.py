@@ -1,10 +1,12 @@
-import asyncio
+import logging
 
-from aiogram import types, Dispatcher
+import emoji
+from aiogram import types
 from aiogram.dispatcher import DEFAULT_RATE_LIMIT
 from aiogram.dispatcher.handler import CancelHandler, current_handler
 from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.utils.exceptions import Throttled
+
+from keyboards.default.buttons import send_request_yes_no_def
 
 
 class ThrottlingMiddleware(BaseMiddleware):
@@ -12,26 +14,32 @@ class ThrottlingMiddleware(BaseMiddleware):
     Simple middleware
     """
 
-    def __init__(self, limit=DEFAULT_RATE_LIMIT, key_prefix='antiflood_'):
-        self.rate_limit = limit
-        self.prefix = key_prefix
-        super(ThrottlingMiddleware, self).__init__()
-
     async def on_process_message(self, message: types.Message, data: dict):
-        handler = current_handler.get()
-        dispatcher = Dispatcher.get_current()
-        if handler:
-            limit = getattr(handler, "throttling_rate_limit", self.rate_limit)
-            key = getattr(handler, "throttling_key", f"{self.prefix}_{handler.__name__}")
-        else:
-            limit = self.rate_limit
-            key = f"{self.prefix}_message"
-        try:
-            await dispatcher.throttle(key, rate=limit)
-        except Throttled as t:
-            await self.message_throttled(message, t)
+        logging.info(f"""message_id {message.message_id}:
+{data}
+""")
+        if message.text == "/start" and data['raw_state'] is not None:
+            await message.delete()
+            await message.answer("""Вы отправили команду /start
+            Но вы уже в стадии активной заявки""")
+            raise CancelHandler()
+        elif (message.text is not None and message.text != "/cancel" and
+              data['raw_state'] in ['Form:priority', 'Form:attach']):
+            await message.delete()
+            await message.answer("""Нажмите кнопку
+            или
+        для отмены заявки, нажмите на ссылку /cancel""")
+            raise CancelHandler()
+        elif ( not (message.text in ["Отправить заявку \U0001FAE1", "Отказаться \U0001F644",
+                                     "/cancel", "/start"] )
+        and data['raw_state'] == 'Form:send_request'):
+            await message.delete()
+            keyboard = send_request_yes_no_def()
+            await message.answer("""Нажмите кнопку
+            или
+        для отмены заявки, нажмите на ссылку /cancel""", reply_markup=keyboard)
             raise CancelHandler()
 
-    async def message_throttled(self, message: types.Message, throttled: Throttled):
-        if throttled.exceeded_count <= 2:
-            await message.reply("Too many requests!")
+
+
+

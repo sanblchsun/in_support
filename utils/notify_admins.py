@@ -24,13 +24,13 @@ async def on_startup_notify(dp: Dispatcher):
 
 
 
-async def send_messege_to_admin(dp: Dispatcher,
-                                     full_name,
-                                     e_mail,
-                                     firma,
-                                     cont_telefon,
-                                     description,
-                                     priority):
+async def send_messege_to_chat(dp: Dispatcher,
+                               full_name,
+                               e_mail,
+                               firma,
+                               cont_telefon,
+                               description,
+                               priority):
 
     # html = '<b>жирный</b>, <strong>жирный</strong>\
     #         <span class="tg-spoiler">скрытый текст</span>, <tg-spoiler>скрытый текст</tg-spoiler>\

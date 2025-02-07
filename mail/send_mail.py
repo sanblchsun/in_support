@@ -1,24 +1,23 @@
 import asyncio
 import logging
 import mimetypes
-import os               # Функции для работы с операционной системой, не зависящие от используемой операционной системы
-import smtplib          # Импортируем библиотеку по работе с SMTP
+import os  # Функции для работы с операционной системой, не зависящие от используемой операционной системы
+import smtplib  # Импортируем библиотеку по работе с SMTP
 import sys
 from configparser import ConfigParser
 from copy import deepcopy
 from email import encoders
-from email.mime.audio import MIMEAudio
-from email.mime.image import MIMEImage
+# from email.mime.audio import MIMEAudio
+# from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
-from pickle import GLOBAL
-
 from mail.html import get_html
 import wget
 from base.controlmysql import controlsql
 from datetime import datetime, time
+
 
 def _check_filters(firma_filter_def, firma_def, to_addrs_def, to_addrs1_def):
     if firma_filter_def:
@@ -33,7 +32,8 @@ def _check_filters(firma_filter_def, firma_def, to_addrs_def, to_addrs1_def):
 
     return to_addrs_def, f"{to_addrs_def}"
 
-#----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
 async def send_email_with_attachment(e_mail,
                                      firma,
                                      full_name,
@@ -76,7 +76,6 @@ async def send_email_with_attachment(e_mail,
 
     to_addrs0 = to_addrs
     msg_To = f"{to_addrs}"
-
 
     try:
         obj_time_start = time.fromisoformat(time_start)
@@ -147,33 +146,35 @@ async def send_email_with_attachment(e_mail,
     finally:
         server.quit()
 
-    # await controlsql(e_mail=e_mail,
-    #                  firma=firma,
-    #                  full_name=full_name,
-    #                  cont_telefon=cont_telefon,
-    #                  description=description,
-    #                  priority=priority,
-    #                  message_id=message_id,
-    #                  fils_list=files_list)
+    await controlsql(e_mail=e_mail,
+                     firma=firma,
+                     full_name=full_name,
+                     cont_telefon=cont_telefon,
+                     description=description,
+                     priority=priority,
+                     message_id=message_id,
+                     fils_list=files_list)
 
     return val_error, check_send_bot
-    #==========================================================================================================================
+    # ==========================================================================================================================
 
-def process_attachement(msg, files):                        # Функция по обработке списка, добавляемых к сообщению файлов
+
+def process_attachement(msg, files):  # Функция по обработке списка, добавляемых к сообщению файлов
     for f in files:
-        if os.path.isfile(f):                               # Если файл существует
-            attach_file(msg,f)                              # Добавляем файл к сообщению
-        elif os.path.exists(f):                             # Если путь не файл и существует, значит - папка
-            dir = os.listdir(f)                             # Получаем список файлов в папке
-            for file in dir:                                # Перебираем все файлы и...
-                attach_file(msg,f+"/"+file)                 # ...добавляем каждый файл к сообщению
+        if os.path.isfile(f):  # Если файл существует
+            attach_file(msg, f)  # Добавляем файл к сообщению
+        elif os.path.exists(f):  # Если путь не файл и существует, значит - папка
+            dir = os.listdir(f)  # Получаем список файлов в папке
+            for file in dir:  # Перебираем все файлы и...
+                attach_file(msg, f + "/" + file)  # ...добавляем каждый файл к сообщению
 
-def attach_file(msg, filepath):                             # Функция по добавлению конкретного файла к сообщению
-    filename = os.path.basename(filepath)                   # Получаем только имя файла
-    ctype, encoding = mimetypes.guess_type(filepath)        # Определяем тип файла на основе его расширения
-    if ctype is None or encoding is not None:               # Если тип файла не определяется
-        ctype = 'application/octet-stream'                  # Будем использовать общий тип
-    maintype, subtype = ctype.split('/', 1)                 # Получаем тип и подтип
+
+def attach_file(msg, filepath):  # Функция по добавлению конкретного файла к сообщению
+    filename = os.path.basename(filepath)  # Получаем только имя файла
+    ctype, encoding = mimetypes.guess_type(filepath)  # Определяем тип файла на основе его расширения
+    if ctype is None or encoding is not None:  # Если тип файла не определяется
+        ctype = 'application/octet-stream'  # Будем использовать общий тип
+    maintype, subtype = ctype.split('/', 1)  # Получаем тип и подтип
     # if maintype == 'text':                                  # Если текстовый файл
     #     with open(filepath) as fp:                          # Открываем файл для чтения
     #         file = MIMEText(fp.read(), _subtype=subtype)    # Используем тип MIMEText
@@ -194,23 +195,21 @@ def attach_file(msg, filepath):                             # Функция п�
     #         encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
 
     with open(filepath, 'rb') as fp:
-        file = MIMEBase(maintype, subtype)              # Используем общий MIME-тип
-        file.set_payload(fp.read())                     # Добавляем содержимое общего типа (полезную нагрузку)
+        file = MIMEBase(maintype, subtype)  # Используем общий MIME-тип
+        file.set_payload(fp.read())  # Добавляем содержимое общего типа (полезную нагрузку)
         fp.close()
-        encoders.encode_base64(file)                    # Содержимое должно кодироваться как Base64
+        encoders.encode_base64(file)  # Содержимое должно кодироваться как Base64
 
-    file.add_header('Content-Disposition', 'attachment', filename=filename) # Добавляем заголовки
+    file.add_header('Content-Disposition', 'attachment', filename=filename)  # Добавляем заголовки
     msg.attach(file)
-
 
 
 if __name__ == '__main__':
     asyncio.run(send_email_with_attachment(e_mail='dffdvfd@fd.ru',
-                               firma="ООО kjhdk",
-                               full_name='Иван',
-                               cont_telefon='49834889',
-                               description='Ура!',
-                               priority="Низкий",
-                               message_id=1111111)
-    )
-
+                                           firma="ООО kjhdk",
+                                           full_name='Иван',
+                                           cont_telefon='49834889',
+                                           description='Ура!',
+                                           priority="Низкий",
+                                           message_id=1111111)
+                )

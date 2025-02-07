@@ -1,28 +1,24 @@
+import asyncio
 import re
+
 import emoji
 from aiogram import types
 from aiogram.dispatcher import FSMContext
+from aiogram.types import ReplyKeyboardRemove
+from aiogram.utils.exceptions import MessageError
 
+from keyboards.default.buttons import send_request_yes_no_def
+from module1c.action import get_status
+from .html import get_html
 from mail.send_mail import send_email_with_attachment
 from states.state_form import Form
 from loader import dp, bot
 from base.sqlighter import SQLighter
-from keyboards.inline.buttons import attach_yes_no, send_request_yes_no,\
-    reject_request, save_person_data, buttons_priority
-from utils.notify_admins import send_messege_to_admin, is_admin_get_firms
+from keyboards.inline.buttons import *
+from utils.notify_admins import send_messege_to_chat, is_admin_get_firms
 from module1c import action
-
-
-
-@dp.message_handler(state='*', commands=['cancel'])
-async def action_del_user_data(message: types.Message, state: FSMContext):
-    current_state = await state.get_state()
-    if str(current_state) != 'None':
-        await message.answer("Вы отменили все свои действия")
-        await state.finish()
-    else:
-        await message.answer("у Вас нет активных действий")
-
+from bs4 import BeautifulSoup
+from .message_del import msg_delete
 
 
 @dp.message_handler(state=None, commands=['firms'])
@@ -32,7 +28,7 @@ async def action_firm(message: types.Message, state: FSMContext):
     res_fo_if = is_admin_get_firms(usr_id_str)
     if res_fo_if:
         await message.answer(f"Уже есть такой список фирм для уведомления: {res_fo_if}. \n"
-                                 f"Ваши старые записи будут стерты")
+                             f"Ваши старые записи будут стерты")
         await state.set_state(Form.update_for_firm)
     else:
         await state.set_state(Form.add_for_firm)
@@ -64,12 +60,11 @@ async def action_unsubscribe(message: types.Message, state: FSMContext):
     usr_id_str = str(usr_id)
     res_fo_if = is_admin_get_firms(usr_id_str)
     if res_fo_if:
-        sql_object  = SQLighter("base/db.db")
+        sql_object = SQLighter("base/db.db")
         sql_object.del_subscriptions_for_admin(usr_id_str)
         await message.answer("Вы отписались от всех уведомлений")
     else:
         await message.answer("У вас нет подписки на уведомления")
-
 
 
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
@@ -109,43 +104,29 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.description, content_types=['text'])
 async def action_description(message: types.Message, state: FSMContext):
+    message_for_edit = await msg_delete(state, message.from_user.id, message.message_id)
+    html = get_html(description=message.text)
+    await bot.edit_message_text(text=f"""{html}""",
+                                chat_id=message.from_user.id,
+                                message_id=message_for_edit,
+                                reply_markup=None)
     await state.update_data(description=message.text)
+    try:
+        await message.delete()
+    except MessageError as e:
+        ...
     keyword = buttons_priority()
     await message.answer("Укажите приоритет заявки:", reply_markup=keyword)
     await state.set_state(Form.priority)
-
-
-@dp.message_handler(state=Form.attach, content_types=['document'])
-async def action_document(message: types.Message, state: FSMContext):
-    await message.answer(f'Обработан файл: {message.document.file_name}')
-    url_file = await message.document.get_url()
-    async with state.proxy() as data:
-        data['dist_url_and_namefile'][url_file] = (message.from_user.id, message.message_id, message.document.file_name)
-
-
-@dp.message_handler(state=Form.attach, content_types=['photo'])
-async def action_photo(message: types.Message, state: FSMContext):
-    url_file = await message.photo[-1].get_url()
-    file_name = str(url_file).split('/')[-1]
-    await message.answer(f'Обработан файл: {file_name}')
-    async with state.proxy() as data:
-        data['dist_url_and_namefile'][url_file] = (message.from_user.id, message.message_id, file_name)
-
-
-@dp.message_handler(state=Form.attach, commands=['attach'])
-async def end_form(message: types.Message, state: FSMContext):
-    keyboard = send_request_yes_no()
-    await state.set_state(Form.send_request)
-    await message.answer(emoji.emojize(':envelope:  Заявка готова, отправить?'),
-                         reply_markup=keyboard)
 
 
 @dp.callback_query_handler(lambda c: c.data in ["low_btn_press",
                                                 "medium_btn_press",
                                                 "high_btn_press",
                                                 "critical_btn_press"],
-                           state="*")
+                           state=Form.states_names)
 async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.answer_callback_query(callback_query_id=callback_query.id)
     if callback_query.data == "low_btn_press":
         await state.update_data(priority="Низкий")
     elif callback_query.data == "medium_btn_press":
@@ -154,129 +135,129 @@ async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMCon
         await state.update_data(priority="Высокий")
     else:
         await state.update_data(priority="Критический")
-
+    data = await state.get_data()
+    html_request = get_html(description=data.get('description'), priority=data.get('priority'))
+    try:
+        await bot.edit_message_text(text=html_request,
+                                    chat_id=callback_query.from_user.id,
+                                    message_id=data.get('message_for_edit'))
+    except Exception as e:
+        await state.finish()
+        await callback_query.answer("""Была удалена форма заявки в истории вашего телеграмм, 
+        начните сначала, нажав /cancel потом /start""")
     keyboard = attach_yes_no()
-    await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
-                         'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
+    msg = await callback_query.message.answer(emoji.emojize(':linked_paperclips:') +
+                                              'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
+    await msg_delete(state, callback_query.from_user.id, msg.message_id)
     await state.set_state(Form.attach)
 
 
-@dp.callback_query_handler(lambda c: c.data == "create_request", state='*')
+@dp.callback_query_handler(lambda c: c.data == "create_request", state=Form.states_names)
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    keyboard = reject_request()
-    await callback_query.message.edit_text(
-        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'),
-        reply_markup=keyboard)
-    await callback_query.message.answer("Укажите Ваши фамилию и имя:")
+    await callback_query.message.edit_text("Укажите Ваши фамилию и имя:")
     await state.set_state(Form.full_name)
 
 
-@dp.callback_query_handler(lambda c: c.data == "del_user_data", state='*')
-async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    sql_object = SQLighter("base/db.db")
-    sql_object.delete_user_data(callback_query.from_user.id)
-    await callback_query.message.edit_text(
-        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'))
-    await callback_query.message.answer("Вы отменили заявку")
-    await state.finish()
-
-
-
-@dp.callback_query_handler(lambda c: c.data == "reject_request", state='*')
-async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text(
-        emoji.emojize(':warning:  НАЧАЛО ФОРМЫ ЗАЯВКИ  :down_arrow: :down_arrow: :down_arrow:\n\n'))
-    await callback_query.message.answer("Вы отменили заявку")
-    await state.finish()
-
-
-@dp.callback_query_handler(lambda c: c.data == "del_current_request", state='*')
-async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text("________________ ")
-    await callback_query.message.answer("Вы отменили заявку")
-    await state.finish()
-
-
-@dp.callback_query_handler(lambda c: c.data == "attach_yes", state='*')
+@dp.callback_query_handler(lambda c: c.data == "attach_yes", state=Form.attach)
 async def action_request_to_support1(callback_query: types.CallbackQuery, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state == 'Form:attach':
-        await bot.answer_callback_query(callback_query_id=callback_query.id)
-        await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
-                                               "   без  текста вложите файлы или сделайте фотографии\n"
-                                               "после нажмите на ссылку /attach")
-        await state.set_state(Form.attach)
-    else:
-        await callback_query.message.edit_text("---------")
-
-
-@dp.callback_query_handler(lambda c: c.data == "attach_no", state='*')
-async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state == 'Form:attach':
-        await bot.answer_callback_query(callback_query_id=callback_query.id)
-        keyboard = send_request_yes_no()
-        await callback_query.message.edit_text(emoji.emojize(":envelope: отправить заявку?"), reply_markup=keyboard)
-        await state.set_state(Form.send_request)
-    else:
-        await callback_query.message.edit_text("---------")
-
-
-@dp.callback_query_handler(lambda c: c.data == "send_yes", state=Form.send_request)
-async def action_request_to_support(callback_query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(send_yes_no=True)
     await bot.answer_callback_query(callback_query_id=callback_query.id)
+    await callback_query.message.edit_text(emoji.emojize(':linked_paperclips:') +
+                                           "   вложите файл или сделайте фотографию")
+    await state.set_state(Form.attach_yes)
+
+
+@dp.callback_query_handler(lambda c: c.data == "attach_no", state=Form.attach)
+async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.answer_callback_query(callback_query_id=callback_query.id)
+    keyboard = send_request_yes_no_def()
+    msg = await callback_query.message.answer(emoji.emojize(":envelope: отправить заявку?"),
+                                              reply_markup=keyboard)
+    await msg_delete(state, callback_query.from_user.id, msg.message_id)
+    await state.set_state(Form.send_request)
+
+
+@dp.message_handler(text="Отправить заявку \U0001FAE1", state=Form.send_request)
+async def action_request_to_support(message: types.Message, state: FSMContext):
+    async def edit_html_request(num):
+        data = await state.get_data()
+        html_request = get_html(description=data.get('description'),
+                                priority=data.get('priority'),
+                                number_request=num)
+        try:
+            await bot.edit_message_text(text=html_request,
+                                        chat_id=message.from_user.id,
+                                        message_id=data.get('message_for_edit'), reply_markup=btn_get_status())
+        except Exception as e:
+            await state.finish()
+            await message.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
+
+    await state.update_data(send_yes_no=True)
     data = await state.get_data()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
-    await callback_query.message.edit_text("Вы нажали 'Отправить сообщение'")
-    user_id = callback_query.from_user.id
+    await msg_delete(state, message.from_user.id, message.message_id)
+    msg = await message.answer("Вы нажали 'Оправить заявку'", reply_markup=ReplyKeyboardRemove())
+    await asyncio.sleep(5)
+    try:
+        await msg.delete()
+    except MessageError as e:
+        ...
+    # 1c integrated
+    # number_from_1c = await action.set_brom(description=data.get('description'))
+    # 1c integrated
+    user_id = message.from_user.id
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
-                                     e_mail=data.get('e_mail'),
-                                     firma=data.get('firma'),
-                                     cont_telefon=data.get('telefon'),
-                                     description=data.get('description'),
-                                     priority=data.get('priority'),
-                                     message_id=user_id,
-                                     http_to_attach=dist_url_and_namefile)
+                                                                   e_mail=data.get('e_mail'),
+                                                                   firma=data.get('firma'),
+                                                                   cont_telefon=data.get('telefon'),
+                                                                   description=data.get('description'),
+                                                                   priority=data.get('priority'),
+                                                                   message_id=user_id,
+                                                                   http_to_attach=dist_url_and_namefile)
     if ident_error:
-        await callback_query.message.edit_text(
+        await message.edit_text(
             f"Ошибка при отправке заявки: {ident_error}. "
             f"Что то пошло не так, обратитесь к поставщику продукта"
         )
     else:
-        await callback_query.message.edit_text("Ваша заявка отправлена. "
-                                           "\nЧтобы направить еще одну заявку, нажмите Меню->start")
-
-        await action.set_brom(description=data.get('description'))
+        await message.answer("""Заявка отправлена.
+    Чтобы направить еще одну заявку, нажмите /start""")
+        # 1c integrated
+        # await edit_html_request(number_from_1c)
+        # 1c integrated
 
         if check_send_bot:
-            await send_messege_to_admin(dp,
-                                     full_name=data.get('full_name'),
-                                     e_mail=data.get('e_mail'),
-                                     firma=data.get('firma'),
-                                     cont_telefon=data.get('telefon'),
-                                     description=data.get('description'),
-                                     priority=data.get('priority'))
+            await send_messege_to_chat(dp,
+                                       full_name=data.get('full_name'),
+                                       e_mail=data.get('e_mail'),
+                                       firma=data.get('firma'),
+                                       cont_telefon=data.get('telefon'),
+                                       description=data.get('description'),
+                                       priority=data.get('priority'))
 
     await state.finish()
 
 
-@dp.callback_query_handler(lambda c: c.data == "send_no", state=Form.send_request)
-async def action_request_to_support(callback_query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(send_yes_no=True)
+@dp.callback_query_handler(lambda c: c.data == "btn_get_status", state=None)
+async def action_btn_get_status(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text(
-        "Вы передумали отправлять запрос, что бы создать заявку нажмите /start"
-    )
-    await bot.send_message(chat_id=callback_query.message.chat.id, text="Вы отменили заявку")
-    await state.finish()
+    msg_html = callback_query.message.parse_entities()
+    soup = BeautifulSoup(msg_html, 'html.parser')
+    num = soup.findAll("code")[3].string
+    status = await get_status(num)
+    tag = soup.findAll("code")[2]
+    tag.string = status
+    html_request = str(soup)
+    try:
+        await bot.edit_message_text(text=html_request,
+                                    chat_id=callback_query.from_user.id,
+                                    message_id=callback_query.message.message_id, reply_markup=btn_get_status())
+    except Exception as e:
+        await state.finish()
+        await callback_query.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
 
 
-@dp.callback_query_handler(lambda c: c.data == "save_no", state='*')
+@dp.callback_query_handler(lambda c: c.data == "save_no", state=Form.states_names)
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     await callback_query.message.edit_text(emoji.emojize("Отказ от сохранения.\n\n"
@@ -284,7 +265,7 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
     await state.set_state(Form.description)
 
 
-@dp.callback_query_handler(lambda c: c.data == "save_yes", state='*')
+@dp.callback_query_handler(lambda c: c.data == "save_yes", state=Form.states_names)
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     sql_object = SQLighter("base/db.db")

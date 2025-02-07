@@ -1,10 +1,14 @@
+import asyncio
+
+import emoji
+from aiogram.utils.exceptions import MessageError
+from telebot.apihelper import delete_message
+
 from states.state_form import Form
 from aiogram import types
-from aiogram.dispatcher import FSMContext
-from loader import dp
+from loader import dp, bot
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.builtin import ChatTypeFilter
-
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
@@ -12,15 +16,29 @@ from aiogram.dispatcher.filters.builtin import ChatTypeFilter
                     state=None,
                     content_types=types.ContentTypes.ANY)
 async def bot_echo(message: types.Message):
-    await message.answer('Что бы заполнить и отправить заявку нажмите на ссылку /start \n'
-                         'А что бы отменить заявку на любой стадии выберите из меню /cancel')
+    await message.delete()
+    msg = await message.answer("""Начните заполнять заявку, нажимая на /start .
+    Или отмените активную заявку на любой стадии, нажимая на /cancel""")
+    await asyncio.sleep(10)
+    try:
+        await bot.delete_message(chat_id=message.from_user.id, message_id=msg.message_id)
+    except MessageError as e:
+        ...
 
 
 # Эхо хендлер, куда летят ВСЕ сообщения с указанным состоянием
 @dp.message_handler(ChatTypeFilter(chat_type=types.ChatType.PRIVATE),
-                    state="*",
+                    state=['Form:full_name', 'Form:telefon', 'Form:e_mail', 'Form:firma',
+                           'Form:beginning', 'Form:attach', 'Form:priority', 'Form:send_request'],
                     content_types=types.ContentTypes.ANY)
 async def bot_echo_all(message: types.Message, state: FSMContext):
+    async def del_message(message, msg):
+        await asyncio.sleep(10)
+        try:
+            await bot.delete_message(chat_id=message.from_user.id, message_id=msg.message_id)
+        except MessageError as e:
+            ...
+
     state_current = await state.get_state()
     if state_current == 'Form:full_name':
         await message.answer('Введите ваше Имя и Фамилию')
@@ -29,24 +47,19 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     elif state_current == 'Form:e_mail':
         await message.answer('Введите ваш e-mail')
     elif state_current == 'Form:firma':
-        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
-							'Нажмите кнопку\n'
-							'или \n'
-                            'для отмены заявки нажмите на ссылку /cancel')
+        await message.delete()
+        msg = await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
+                             'Нажмите кнопку\n'
+                             'или \n'
+                             'для отмены заявки нажмите на ссылку /cancel')
+        await del_message(message, msg)
     elif state_current == 'Form:beginning':
-        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
-							'Нажмите кнопку\n'
-							'или \n'
-                            'для отмены заявки нажмите на ссылку /cancel')
-    elif state_current == 'Form:priority':
-        await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
-							'Нажмите кнопку\n'
-							'или \n'
-                            'для отмены заявки нажмите на ссылку /cancel')
-    else:
-        await message.answer('Неверный формат\n'
-                             'Вы все еще на стадии заполнения заявки.\n\n'
-							'Введите данные\n'
-							'или \n'
-                            'для отмены заявки нажмите на ссылку /cancel')
+        await message.delete()
+        msg = await message.answer('Вы все еще на стадии заполнения заявки. \n\n'
+                             'Нажмите кнопку\n'
+                             'или \n'
+                             'для отмены заявки нажмите на ссылку /cancel')
+        await del_message(message, msg)
+
+
 
