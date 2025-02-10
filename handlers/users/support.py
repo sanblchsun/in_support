@@ -8,7 +8,9 @@ from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.exceptions import MessageError
 
 from keyboards.default.buttons import send_request_yes_no_def
-from module1c.action import get_status
+# 1c integrated
+# from module1c.action import get_status
+# 1c integrated
 from .html import get_html
 from mail.send_mail import send_email_with_attachment
 from states.state_form import Form
