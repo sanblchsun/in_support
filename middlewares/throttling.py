@@ -15,9 +15,9 @@ class ThrottlingMiddleware(BaseMiddleware):
     """
 
     async def on_process_message(self, message: types.Message, data: dict):
-        logging.info(f"""message_id {message.message_id}:
-{data}
-""")
+#         logging.info(f"""message_id {message.message_id}:
+# {data}
+# """)
         if message.text == "/start" and data['raw_state'] is not None:
             await message.delete()
             await message.answer("""Вы отправили команду /start

@@ -5,3 +5,4 @@ wget>=3.2
 PyMySQL~=1.0.2
 brom==1.0.1b9
 beautifulsoup4
+telebot
