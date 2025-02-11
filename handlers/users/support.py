@@ -197,7 +197,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     data = await state.get_data()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
     await msg_delete(state, message.from_user.id, message.message_id)
-    msg = await message.answer("Вы нажали 'Оправить заявку'", reply_markup=ReplyKeyboardRemove())
+    msg = await message.answer("Вы нажали 'Отправить заявку'", reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(5)
     try:
         await msg.delete()
