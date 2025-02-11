@@ -98,10 +98,9 @@ async def action_e_mail(message: types.Message, state: FSMContext):
 async def action_insert_in_base(message: types.Message, state: FSMContext):
     await state.update_data(firma=message.text)
     keyboard = save_person_data()
-    await message.answer('Сохранить выше введенную информацию, чтобы использовать в следующей заявке\n'
+    await message.answer('Сохранить выше введенную информацию, чтобы использовать в заявках\n'
                          'Нажимая на кнопку ДА, вы даете согласие на обработку ваших персональных данных',
                          reply_markup=keyboard)
-    await state.set_state(Form.description)
 
 
 @dp.message_handler(state=Form.description, content_types=['text'])
@@ -154,7 +153,7 @@ async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMCon
     await state.set_state(Form.attach)
 
 
-@dp.callback_query_handler(lambda c: c.data == "create_request", state=Form.states_names)
+@dp.callback_query_handler(lambda c: c.data == "create_request", state=Form.beginning)
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
     await callback_query.message.edit_text("Укажите Ваши фамилию и имя:")
@@ -239,32 +238,31 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
 
     await state.finish()
 
+# 1c integrated
+# @dp.callback_query_handler(lambda c: c.data == "btn_get_status", state=None)
+# async def action_btn_get_status(callback_query: types.CallbackQuery, state: FSMContext):
+#     await bot.answer_callback_query(callback_query_id=callback_query.id)
+#     msg_html = callback_query.message.parse_entities()
+#     soup = BeautifulSoup(msg_html, 'html.parser')
+#     num = soup.findAll("code")[3].string
+#     status = await get_status(num)
+#     tag = soup.findAll("code")[2]
+#     tag.string = status
+#     html_request = str(soup)
+#     try:
+#         await bot.edit_message_text(text=html_request,
+#                                     chat_id=callback_query.from_user.id,
+#                                     message_id=callback_query.message.message_id, reply_markup=btn_get_status())
+#     except Exception as e:
+#         await state.finish()
+#         await callback_query.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
+# 1c integrated
 
-@dp.callback_query_handler(lambda c: c.data == "btn_get_status", state=None)
-async def action_btn_get_status(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    msg_html = callback_query.message.parse_entities()
-    soup = BeautifulSoup(msg_html, 'html.parser')
-    num = soup.findAll("code")[3].string
-    status = await get_status(num)
-    tag = soup.findAll("code")[2]
-    tag.string = status
-    html_request = str(soup)
-    try:
-        await bot.edit_message_text(text=html_request,
-                                    chat_id=callback_query.from_user.id,
-                                    message_id=callback_query.message.message_id, reply_markup=btn_get_status())
-    except Exception as e:
-        await state.finish()
-        await callback_query.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
-
-
-@dp.callback_query_handler(lambda c: c.data == "save_no", state=Form.states_names)
-async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text(emoji.emojize("Отказ от сохранения.\n\n"
-                                                         ":page_facing_up: Расскажите - что у вас случилось?"))
-    await state.set_state(Form.description)
+# @dp.callback_query_handler(lambda c: c.data == "save_no", state=Form.states_names)
+# async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
+#     await bot.answer_callback_query(callback_query_id=callback_query.id)
+#     await callback_query.message.edit_text(emoji.emojize("Отказ от сохранения."))
+#     await state.finish()
 
 
 @dp.callback_query_handler(lambda c: c.data == "save_yes", state=Form.states_names)
@@ -279,6 +277,8 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
         current_state['telefon'],
         current_state['e_mail'],
         current_state['firma'], )
-    await state.set_state(Form.description)
-    await callback_query.message.edit_text(emoji.emojize("Сохранены. \n\n"
-                                                         ":page_facing_up: Расскажите - что у вас случилось?"))
+    await state.finish()
+    await callback_query.message.answer("""Введенные данные сохранены 
+        и
+будут использоваться в ваших заявках. 
+Чтобы отправить заявку, нажмите /start.""")

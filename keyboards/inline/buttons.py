@@ -21,8 +21,8 @@ def send_request_yes_no():
 
 
 def request_or_reject():
-    rqsr_btn = InlineKeyboardButton('Заполнить заявку', callback_data='create_request')
-    del_btn = InlineKeyboardButton("отмена", callback_data="del_current_request")
+    rqsr_btn = InlineKeyboardButton('Согласиться', callback_data='create_request')
+    del_btn = InlineKeyboardButton("Отказаться", callback_data="del_current_request")
     return InlineKeyboardMarkup().add(del_btn, rqsr_btn)
 
 
