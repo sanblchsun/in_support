@@ -9,7 +9,7 @@ from aiogram.utils.exceptions import MessageError
 
 from keyboards.default.buttons import send_request_yes_no_def
 # 1c integrated
-# from module1c.action import get_status
+from module1c.action import get_status
 # 1c integrated
 from .html import get_html
 from mail.send_mail import send_email_with_attachment
@@ -186,9 +186,17 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                 priority=data.get('priority'),
                                 number_request=num)
         try:
+            # 1c integrated
+            # await bot.edit_message_text(text=html_request,
+            #                             chat_id=message.from_user.id,
+            #                             message_id=data.get('message_for_edit'), reply_markup=btn_get_status())
+            # 1c integrated
+
             await bot.edit_message_text(text=html_request,
                                         chat_id=message.from_user.id,
-                                        message_id=data.get('message_for_edit'), reply_markup=btn_get_status())
+                                        message_id=data.get('message_for_edit'))
+
+
         except Exception as e:
             await state.finish()
             await message.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
@@ -204,7 +212,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     except MessageError as e:
         ...
     # 1c integrated
-    # number_from_1c = await action.set_brom(description=data.get('description'))
+    number_from_1c = await action.set_brom(description=data.get('description'))
     # 1c integrated
     user_id = message.from_user.id
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
@@ -214,7 +222,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                                                    description=data.get('description'),
                                                                    priority=data.get('priority'),
                                                                    message_id=user_id,
-                                                                   http_to_attach=dist_url_and_namefile)
+                                                                   http_to_attach=dist_url_and_namefile,
+                                                                   number_from_1c=number_from_1c)
     if ident_error:
         await message.edit_text(
             f"Ошибка при отправке заявки: {ident_error}. "
@@ -224,7 +233,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
         await message.answer("""Заявка отправлена.
     Чтобы направить еще одну заявку, нажмите /start""")
         # 1c integrated
-        # await edit_html_request(number_from_1c)
+        await edit_html_request(number_from_1c)
         # 1c integrated
 
         if check_send_bot:
@@ -234,7 +243,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                        firma=data.get('firma'),
                                        cont_telefon=data.get('telefon'),
                                        description=data.get('description'),
-                                       priority=data.get('priority'))
+                                       priority=data.get('priority'),
+                                       number_from_1c=number_from_1c)
 
     await state.finish()
 

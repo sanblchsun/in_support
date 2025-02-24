@@ -4,7 +4,7 @@ from aiogram import Dispatcher
 from aiogram.utils.exceptions import ChatNotFound
 
 from base.sqlighter import SQLighter
-from data.config import ADMINS
+from data.config import ADMINS, CHAT_ID
 
 def is_admin_get_firms(usr_id):
     if usr_id in ADMINS:
@@ -30,7 +30,8 @@ async def send_messege_to_chat(dp: Dispatcher,
                                firma,
                                cont_telefon,
                                description,
-                               priority):
+                               priority,
+                               number_from_1c=''):
 
     # html = '<b>жирный</b>, <strong>жирный</strong>\
     #         <span class="tg-spoiler">скрытый текст</span>, <tg-spoiler>скрытый текст</tg-spoiler>\
@@ -55,14 +56,21 @@ async def send_messege_to_chat(dp: Dispatcher,
     #         <pre>предварительно отформатированный блок кода фиксированной ширины</pre>'
 
     html = f"""
-           <i><b>Компания: </b></i>\n<code>{firma}</code>\n
-           <i><b>Фамилия Имя: </b></i>\n<code>{full_name}</code>\n
-           <i><b>Контактный телефон: </b>\n</i><code>{cont_telefon}</code>\n
-           <i><b>E-mail адрес: </b></i>\n<code>{e_mail}</code>\n
-           <i><b>Описание проблемы: </b></i>\n<code>{description}</code>\n
-           <i><b>Приоритет заявки: </b></i>\n<code>{priority}</code>\n"""
+           <i><b>Заявка №: </b></i><code>{number_from_1c}</code>
+           <i><b>Компания: </b></i>
+<code>{firma}</code>
+           <i><b>Фамилия Имя: </b></i>
+<code>{full_name}</code>
+           <i><b>Контактный телефон: </b>
+</i><code>{cont_telefon}</code>
+           <i><b>E-mail адрес: </b></i>
+<code>{e_mail}</code>
+           <i><b>Описание проблемы: </b></i>
+<code>{description}</code>
+           <i><b>Приоритет заявки: </b></i>
+<code>{priority}</code>"""
 
-    await dp.bot.send_message(chat_id=-1002462760107, text=html, parse_mode=types.ParseMode.HTML)
+    await dp.bot.send_message(chat_id=CHAT_ID, text=html, parse_mode=types.ParseMode.HTML)
     # logging.info(f'html: send, pattern_tmp: {pattern_tmp}, firma_tmp: {firma_tmp}, admin: {admin}, ADMINS: {ADMINS}')
 
 
