@@ -3,6 +3,7 @@ import sys
 import time
 from brom import *
 from configparser import ConfigParser
+import re
 
 
 @staticmethod
@@ -124,18 +125,29 @@ async def get_count(count=500):
         print("==========================================================================")
 
 
-async def set_brom(description):
+async def set_brom(description, firma):
     klient = connect1c()
     if not klient:
         return False
 
     docObject = klient.Документы.Инцидент.СоздатьДокумент()
+    request_text = klient.СоздатьЗапрос("""
+ВЫБРАТЬ
+	Клиенты.Наименование КАК Наименование
+ИЗ
+	Справочник.Клиенты КАК Клиенты
+ГДЕ
+	Клиенты.Наименование ПОДОБНО &firma
+""")
+    request_text.УстановитьПараметр("firma", f"%{firma}%")
+    res = request_text.Выполнить()
+    firma_1c = res[0].Наименование
 
     # Заполняем реквизиты
     docObject.Дата = datetime.today()
     docObject.ТемаОбращения = "Новая заявка"
-    docObject.Клиент = klient.Справочники.Клиенты.НайтиПоНаименованию("РИБП")
-    docObject.Приоритет = klient.Справочники.Приоритеты.НайтиПоНаименованию("Низкий")
+    docObject.Клиент = klient.Справочники.Клиенты.НайтиПоНаименованию(firma_1c)
+    # docObject.Приоритет = klient.Справочники.Приоритеты.НайтиПоНаименованию("Низкий")
     docObject.Описание = description
     docObject.Состояние = klient.Справочники.СостоянияИнцидентов.НайтиПоНаименованию("00. Новая заявка")
 
@@ -154,7 +166,8 @@ async def set_brom(description):
 
 if __name__ == "__main__":
     start = time.time()
-    asyncio.run(get_status('0000119822'))
+    # asyncio.run(set_brom("dashjkjh", "Буревестник (АГ Марин)"))
+    asyncio.run(set_brom("dashjkjh", "Марин"))
     end = time.time()
     print("The time of execution of above program is :",
           (end - start) * 10 ** 3, "ms")

@@ -212,7 +212,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     except MessageError as e:
         ...
     # 1c integrated
-    number_from_1c = await action.set_brom(description=data.get('description'))
+    number_from_1c = await action.set_brom(description=data.get('description'), firma=data.get('firma'))
     # 1c integrated
     user_id = message.from_user.id
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
