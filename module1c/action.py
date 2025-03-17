@@ -3,7 +3,7 @@ import sys
 import time
 from brom import *
 from configparser import ConfigParser
-import re
+from module1c.text import get_text
 
 
 @staticmethod
@@ -125,7 +125,7 @@ async def get_count(count=500):
         print("==========================================================================")
 
 
-async def set_brom(description, firma):
+async def set_brom(e_mail, firma, full_name, cont_telefon, description, priority):
     klient = connect1c()
     if not klient:
         return False
@@ -148,7 +148,12 @@ async def set_brom(description, firma):
     docObject.ТемаОбращения = "Новая заявка"
     docObject.Клиент = klient.Справочники.Клиенты.НайтиПоНаименованию(firma_1c)
     # docObject.Приоритет = klient.Справочники.Приоритеты.НайтиПоНаименованию("Низкий")
-    docObject.Описание = description
+    docObject.Описание = get_text(e_mail=e_mail,
+                                  firma=firma,
+                                  full_name=full_name,
+                                  cont_telefon=cont_telefon,
+                                  description=description,
+                                  priority=priority)
     docObject.Состояние = klient.Справочники.СостоянияИнцидентов.НайтиПоНаименованию("00. Новая заявка")
 
     # докОбъект.КонтактноеЛицо   = клиент.Справочники.Пользователи.НайтиПоНаименованию("Александрова Алена")
@@ -167,7 +172,12 @@ async def set_brom(description, firma):
 if __name__ == "__main__":
     start = time.time()
     # asyncio.run(set_brom("dashjkjh", "Буревестник (АГ Марин)"))
-    asyncio.run(set_brom("dashjkjh", "Марин"))
+    asyncio.run(set_brom(e_mail="test@test.ru",
+                         firma="Марин",
+                         full_name="Test Testovich",
+                         cont_telefon="9991111111",
+                         description="TEST",
+                         priority="низкий"))
     end = time.time()
     print("The time of execution of above program is :",
           (end - start) * 10 ** 3, "ms")
