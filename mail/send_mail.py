@@ -105,7 +105,7 @@ async def send_email_with_attachment(e_mail,
     msg["From"] = FROM
     msg["To"] = msg_To
     msg['Reply-To'] = e_mail
-    msg["Subject"] = "Новая заявка"
+    msg["Subject"] = "Заявка из Телеграмм Бота"
     msg["Date"] = formatdate(localtime=True)
 
     # msg["To"] = ', '.join(e_mail)

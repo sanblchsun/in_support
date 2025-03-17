@@ -105,11 +105,12 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.description, content_types=['text'])
 async def action_description(message: types.Message, state: FSMContext):
-    message_for_edit = await msg_delete(state, message.from_user.id, message.message_id)
+    await msg_delete(state, message.from_user.id, message.message_id)
     html = get_html(description=message.text)
+    data = await state.get_data()
     await bot.edit_message_text(text=f"""{html}""",
                                 chat_id=message.from_user.id,
-                                message_id=message_for_edit,
+                                message_id=data.get("message_for_edit"),
                                 reply_markup=None)
     await state.update_data(description=message.text)
     try:
