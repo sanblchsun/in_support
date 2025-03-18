@@ -141,7 +141,10 @@ async def set_brom(e_mail, firma, full_name, cont_telefon, description, priority
 """)
     request_text.УстановитьПараметр("firma", f"%{firma}%")
     res = request_text.Выполнить()
-    firma_1c = res[0].Наименование
+    if len(res) == 0:
+        firma_1c = firma
+    else:
+        firma_1c = res[0].Наименование
 
     # Заполняем реквизиты
     docObject.Дата = datetime.today()
