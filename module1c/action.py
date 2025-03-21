@@ -128,7 +128,7 @@ async def get_count(count=500):
 async def set_brom(e_mail, firma, full_name, cont_telefon, description, priority):
     klient = connect1c()
     if not klient:
-        return False
+        return "Заявке номер не присвоен"
 
     docObject = klient.Документы.Инцидент.СоздатьДокумент()
     request_text = klient.СоздатьЗапрос("""

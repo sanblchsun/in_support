@@ -236,7 +236,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
             f"Что то пошло не так, обратитесь к поставщику продукта"
         )
     else:
-        await message.answer("""Заявка отправлена.
+        await message.answer(f"""Заявка отправлена, 
+    номер заявки: {number_from_1c}.
     Чтобы направить еще одну заявку, нажмите /start""")
         # 1c integrated
         await edit_html_request(number_from_1c)
