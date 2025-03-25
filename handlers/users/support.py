@@ -78,6 +78,9 @@ async def action_full_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.telefon, content_types=types.ContentType.TEXT)
 async def action_telefon(message: types.Message, state: FSMContext):
+    if len(message.text) > 50:
+        await message.answer("Введите не боллее 50 знаков для телефона")
+        return
     await state.update_data(telefon=message.text)
     await message.answer("Укажите Ваш e-mail:")
     await state.set_state(Form.e_mail)
