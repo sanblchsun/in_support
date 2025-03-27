@@ -111,10 +111,12 @@ async def action_description(message: types.Message, state: FSMContext):
     await msg_delete(state, message.from_user.id, message.message_id)
     html = get_html(description=message.text)
     data = await state.get_data()
-    await bot.edit_message_text(text=f"""{html}""",
-                                chat_id=message.from_user.id,
-                                message_id=data.get("message_for_edit"),
-                                reply_markup=None)
+    try:
+        await bot.edit_message_text(text=f"""{html}""",
+                                    chat_id=message.from_user.id,
+                                    message_id=data.get("message_for_edit"),
+                                    reply_markup=None)
+    except MessageError as e: ...
     await state.update_data(description=message.text)
     try:
         await message.delete()
