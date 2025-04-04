@@ -1,11 +1,9 @@
-venv/
+﻿venv/
 documents/
 db.db
 *.ini
 *.ini_
 .env
-docker-compose.yml
-Dockerfile
 test.py
 *.pyc
 .idea/

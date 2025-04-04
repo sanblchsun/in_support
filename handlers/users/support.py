@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import re
 
 import emoji
@@ -71,6 +71,10 @@ async def action_unsubscribe(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.full_name, content_types=types.ContentType.TEXT)
 async def action_full_name(message: types.Message, state: FSMContext):
+    if len(message.text) > 100:
+        await message.answer("""Разрешено не больше 100 знаков.
+        Введите пожалуйста Ваши фамилию и имя:""")
+        return
     await state.update_data(full_name=message.text)
     await message.answer("Укажите Ваш контактный телефон:")
     await state.set_state(Form.telefon)
@@ -88,6 +92,10 @@ async def action_telefon(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.e_mail, content_types=types.ContentType.TEXT)
 async def action_e_mail(message: types.Message, state: FSMContext):
+    if len(message.text) > 100:
+        await message.answer("""Разрешено не больше 100 знаков.
+        Введите пожалуйста Ваш e-mail:""")
+        return
     if not bool(re.search(r"^[\w\.\+\-]+\@[\w\.\-]+\.[a-z]{2,7}$", message.text)):
         await message.answer('Недействительный email ✉. Повторите')
         return
@@ -99,6 +107,10 @@ async def action_e_mail(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.firma, content_types=types.ContentType.TEXT)
 async def action_insert_in_base(message: types.Message, state: FSMContext):
+    if len(message.text) > 100:
+        await message.answer("""Разрешено не больше 100 знаков.
+        От какой компании обращаетесь:""")
+        return
     await state.update_data(firma=message.text)
     keyboard = save_person_data()
     await message.answer('Сохранить выше введенную информацию, чтобы использовать в заявках\n'
