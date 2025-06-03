@@ -31,9 +31,9 @@ def reject_request():
     return InlineKeyboardMarkup().add(del_btn)
 
 def save_person_data():
-    yes_btn = InlineKeyboardButton("ДА", callback_data="save_yes")
     no_btn = InlineKeyboardButton("НЕТ", callback_data="save_no")
-    return InlineKeyboardMarkup().add(yes_btn, no_btn)
+    yes_btn = InlineKeyboardButton("ДА", callback_data="save_yes")
+    return InlineKeyboardMarkup().add(no_btn, yes_btn)
 
 
 def buttons_priority():
