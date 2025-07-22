@@ -42,9 +42,9 @@ async def bot_start(message: types.Message, state: FSMContext):
         await message.delete()
     else:
         keyboard = request_or_reject()
-        msg = await message.answer(f"""Привет, {message.from_user.full_name}!
-Давайте знакомится!
-Для техподдержки. Просим ответить на несколько вопросов.""",
+        msg = await message.answer("""Уважаемый пользователь, вас приветствует ТГ-бот ИИС!
+Прошу Вас ответить на несколько вопросов, которые мне необходимо задать для отправки
+Вашей заявки в техническую поддержку.""",
                              reply_markup=keyboard)
         await state.set_state(Form.beginning)
         await state.update_data(message_for_edit=msg.message_id)
