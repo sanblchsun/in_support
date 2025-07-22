@@ -43,7 +43,8 @@ async def bot_start(message: types.Message, state: FSMContext):
     else:
         keyboard = request_or_reject()
         msg = await message.answer("""Уважаемый пользователь, вас приветствует ТГ-бот ИИС!
-Прошу Вас ответить на несколько вопросов, которые мне необходимо задать для отправки
+Прошу Вас ответить на несколько вопросов,
+которые мне необходимо задать для отправки
 Вашей заявки в техническую поддержку.""",
                              reply_markup=keyboard)
         await state.set_state(Form.beginning)
