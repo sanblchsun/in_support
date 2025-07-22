@@ -113,8 +113,9 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
         return
     await state.update_data(firma=message.text)
     keyboard = save_person_data()
-    await message.answer('Сохранить выше введенную информацию, чтобы использовать в заявках\n'
-                         'Нажимая на кнопку ДА, вы даете согласие на обработку ваших персональных данных',
+    await message.answer("""Я могу сохранить Ваши данные, чтобы в следующий раз их не нужно было вводить при
+отправке заявки. Нажимая кнопку «ДА», Вы даете согласие на обработку Ваших
+персональных данных.""",
                          reply_markup=keyboard)
 
 
@@ -310,7 +311,6 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
         current_state['e_mail'],
         current_state['firma'], )
     await state.finish()
-    await callback_query.message.answer("""Введенные данные сохранены 
-        и
-будут использоваться в ваших заявках. 
-Чтобы отправить заявку, нажмите /start.""")
+    await callback_query.message.answer("""Спасибо, Ваши данные сохранены и 
+будут автоматически использоваться при подаче всех
+последующих заявок. Нажмите /start, чтобы отправить заявку.""")

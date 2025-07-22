@@ -23,7 +23,7 @@ def send_request_yes_no():
 def request_or_reject():
     rqsr_btn = InlineKeyboardButton('Согласиться', callback_data='create_request')
     del_btn = InlineKeyboardButton("Отказаться", callback_data="del_current_request")
-    return InlineKeyboardMarkup().add(del_btn, rqsr_btn)
+    return InlineKeyboardMarkup().add(rqsr_btn, del_btn)
 
 
 def reject_request():
@@ -33,7 +33,7 @@ def reject_request():
 def save_person_data():
     no_btn = InlineKeyboardButton("НЕТ", callback_data="save_no")
     yes_btn = InlineKeyboardButton("ДА", callback_data="save_yes")
-    return InlineKeyboardMarkup().add(no_btn, yes_btn)
+    return InlineKeyboardMarkup().add(yes_btn, no_btn)
 
 
 def buttons_priority():
