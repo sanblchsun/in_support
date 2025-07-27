@@ -40,7 +40,7 @@ async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMCo
 
 
 
-@dp.callback_query_handler(lambda c: c.data in ["reject_request", "del_current_request", "save_no"],
+@dp.callback_query_handler(lambda c: c.data in ["reject_request", "del_current_request"],
                            state=Form.states_names)
 async def action_del_user_data(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)

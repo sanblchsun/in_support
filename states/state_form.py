@@ -7,6 +7,7 @@ class Form(StatesGroup):
     telefon = State()
     e_mail = State()
     firma = State()
+    yes_no_save = State()
     insert_in_base = State()
     description = State()
     priority = State()
