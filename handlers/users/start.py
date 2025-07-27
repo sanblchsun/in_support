@@ -41,6 +41,11 @@ async def bot_start(message: types.Message, state: FSMContext):
         await state.update_data(telefon=list_data_client[0][4])
         await message.delete()
     else:
+        try:
+            i = random.randint(1,5)
+            await message.answer_photo(photo=InputFile(f'img/supp{i}.jpeg'), reply_markup=ReplyKeyboardRemove())
+        except FileNotFoundError as e:
+            pass
         keyboard = request_or_reject()
         msg = await message.answer("""Уважаемый пользователь, вас приветствует ТГ-бот ИИС!
 Прошу Вас ответить на несколько вопросов,

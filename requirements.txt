@@ -1,5 +1,5 @@
 aiogram>=2.11.2,<3.0
-environs~=8.0.0
+environs
 emoji>=1.7.0
 wget>=3.2
 PyMySQL~=1.0.2

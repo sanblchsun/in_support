@@ -33,7 +33,7 @@ async def bot_echo(message: types.Message):
                     content_types=types.ContentTypes.ANY)
 async def bot_echo_all(message: types.Message, state: FSMContext):
     async def del_message(message, msg):
-        await asyncio.sleep(10)
+        await asyncio.sleep(3)
         try:
             await bot.delete_message(chat_id=message.from_user.id, message_id=msg.message_id)
         except MessageError as e:
