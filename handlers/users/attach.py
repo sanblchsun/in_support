@@ -29,9 +29,9 @@ async def action_document(message: types.Message, state: FSMContext):
         return
     keyboard = send_request_yes_no_def()
     await message.reply(f'В заявку вложен файл: {message.video.file_name}', reply_markup=keyboard)
-    url_file = await message.document.get_url()
+    url_file = await message.video.get_url()
     async with state.proxy() as data:
-        data['dist_url_and_namefile'][url_file] = (message.from_user.id, message.message_id, message.document.file_name)
+        data['dist_url_and_namefile'][url_file] = (message.from_user.id, message.message_id, message.video.file_name)
     await state.set_state(Form.send_request)
 
 
@@ -53,7 +53,7 @@ async def action_document(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.attach_yes, content_types=['photo'])
 async def action_photo(message: types.Message, state: FSMContext):
-    doc_size = message.photo.file_size
+    doc_size = message.photo[-1].file_size
     if doc_size > 41943040:
         await message.reply("""В заявку вложен файл с недопустимым размером,
         повторите с файлом менее 40Мб """)
