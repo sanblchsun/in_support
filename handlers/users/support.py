@@ -1,4 +1,5 @@
 ﻿import asyncio
+import logging
 import re
 
 import emoji
@@ -136,15 +137,25 @@ async def action_insert_in_base(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Form.description, content_types=['text'])
 async def action_description(message: types.Message, state: FSMContext):
-    await msg_delete(state, message.from_user.id, message.message_id)
+    data = await state.get_data()
+    message_id_start = data.get("message_for_edit")
+    await msg_delete(message_from_user_id=message.from_user.id,
+                         message_id_start= message_id_start,
+                         message_id_end=message.message_id)
     html = get_html(description=message.text)
     data = await state.get_data()
     try:
-        await bot.edit_message_text(text=f"""{html}""",
+        await bot.edit_message_text(text=html,
                                     chat_id=message.from_user.id,
                                     message_id=data.get("message_for_edit"),
                                     reply_markup=None)
-    except MessageError as e: ...
+    except Exception as e:
+        msg = await message.answer(html)
+        await  state.update_data(message_for_edit=msg.message_id)
+        logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id} 
+        Сообщение HTML возможно удалено ошибка в строке 148 кода support.py """)
+
+
     await state.update_data(description=message.text)
     try:
         await message.delete()
@@ -177,13 +188,21 @@ async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMCon
                                     chat_id=callback_query.from_user.id,
                                     message_id=data.get('message_for_edit'))
     except Exception as e:
-        await state.finish()
-        await callback_query.answer("""Была удалена форма заявки в истории вашего телеграмм, 
-        начните сначала, нажав /cancel потом /start""")
+        msg1 = await callback_query.message.answer(html_request)
+        await  state.update_data(message_for_edit=msg1.message_id)
+        logging.error(f"""Пользователь: {callback_query.from_user.full_name}, его id: {callback_query.from_user.id} 
+        Сообщение HTML возможно удалено ошибка в строке 187 кода support.py """)
+        await msg_delete(message_from_user_id=callback_query.from_user.id,
+                         message_id_start=callback_query.message.message_id - 1,
+                         message_id_end=msg1.message_id)
     keyboard = attach_yes_no()
     msg = await callback_query.message.answer(emoji.emojize(':linked_paperclips:') +
                                               'Хотите приложить файлы и фотографии?', reply_markup=keyboard)
-    await msg_delete(state, callback_query.from_user.id, msg.message_id)
+    data = await state.get_data()
+    message_id_start = data.get("message_for_edit")
+    await msg_delete(message_from_user_id=callback_query.from_user.id,
+                         message_id_start=message_id_start,
+                         message_id_end=msg.message_id)
     await state.set_state(Form.attach)
 
 
@@ -208,7 +227,11 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
     keyboard = send_request_yes_no_def()
     msg = await callback_query.message.answer(emoji.emojize(":envelope: отправить заявку?"),
                                               reply_markup=keyboard)
-    await msg_delete(state, callback_query.from_user.id, msg.message_id)
+    data = await state.get_data()
+    message_id_start = data.get("message_for_edit")
+    await msg_delete(message_from_user_id=callback_query.from_user.id,
+                         message_id_start=message_id_start,
+                         message_id_end=msg.message_id)
     await state.set_state(Form.send_request)
 
 
@@ -233,12 +256,18 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
 
         except Exception as e:
             await state.finish()
-            await message.answer("Была удалена форма заявки в истории вашего телеграмм, начните сначала")
+            await message.answer(html_request)
+            logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id} 
+            Сообщение HTML возможно удалено ошибка в строке 261 кода support.py """)
 
     await state.update_data(send_yes_no=True)
     data = await state.get_data()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
-    await msg_delete(state, message.from_user.id, message.message_id)
+    data = await state.get_data()
+    message_id_start = data.get("message_for_edit")
+    await msg_delete(message_from_user_id=message.from_user.id,
+                         message_id_start=message_id_start,
+                         message_id_end=message.message_id)
     msg = await message.answer("Вы нажали 'Отправить заявку'", reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(5)
     try:
@@ -252,6 +281,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                            cont_telefon=data.get('telefon'),
                                            description=data.get('description'),
                                            priority=data.get('priority'))
+    # number_from_1c = '000000000'
     user_id = message.from_user.id
     # 1c integrated
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
@@ -264,17 +294,20 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                                                    http_to_attach=dist_url_and_namefile,
                                                                    number_from_1c=number_from_1c)
     if ident_error:
-        await message.edit_text(
-            f"Ошибка при отправке заявки: {ident_error}. "
-            f"Что то пошло не так, обратитесь к поставщику продукта"
-        )
+        try:
+            await message.edit_text(
+                f"Ошибка при отправке заявки: {ident_error}. "
+                f"Что то пошло не так, обратитесь к поставщику продукта"
+            )
+        except Exception as e:
+            ...
     else:
-        await message.answer(f"""Заявка отправлена, 
-    номер заявки: {number_from_1c}.
-    Чтобы направить еще одну заявку, нажмите /start""")
         # 1c integrated
         await edit_html_request(number_from_1c)
         # 1c integrated
+        await message.answer(f"""Заявка отправлена, 
+    номер заявки: {number_from_1c}.
+    Чтобы направить еще одну заявку, нажмите /start""")
 
         if check_send_bot:
             await send_messege_to_chat(dp,
@@ -292,11 +325,14 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(lambda c: c.data == "save_no", state=Form.yes_no_save)
 async def action_request_to_support2(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query_id=callback_query.id)
-    await callback_query.message.edit_text(emoji.emojize("""Отказ от сохранения.
+    try:
+        await callback_query.message.edit_text(emoji.emojize("""Отказ от сохранения.
 
 Вы можете продолжать заполнять заявку.
 
 Расскажите, что у вас случилось?"""))
+    except Exception as e:
+        ...
     await state.set_state(Form.description)
 
 @dp.callback_query_handler(lambda c: c.data == "save_yes", state=Form.yes_no_save)
