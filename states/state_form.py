@@ -21,3 +21,4 @@ class Form(StatesGroup):
     message_for_edit = State()
     error = State()
     id_save = State()
+    waiting = State()

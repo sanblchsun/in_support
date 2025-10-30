@@ -10,7 +10,7 @@ from aiogram.utils.exceptions import MessageError
 
 from keyboards.default.buttons import send_request_yes_no_def
 # 1c integrated
-from module1c.action import get_status
+# from module1c.action import get_status
 # 1c integrated
 from .html import get_html
 from mail.send_mail import send_email_with_attachment
@@ -20,7 +20,7 @@ from base.sqlighter import SQLighter
 from keyboards.inline.buttons import *
 from utils.notify_admins import send_messege_to_chat, is_admin_get_firms
 from module1c import action
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 from .message_del import msg_delete
 
 
@@ -357,3 +357,4 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
 
 Расскажите, что у вас случилось?""")
     await state.set_state(Form.description)
+

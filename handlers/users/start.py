@@ -1,16 +1,25 @@
+import asyncio
 import random
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.types import InputFile, ReplyKeyboardRemove
 from base.sqlighter import SQLighter
-from loader import dp
+from loader import dp, bot
 from aiogram.dispatcher import FSMContext
 from states.state_form import Form
 from keyboards.inline.buttons import request_delete_with_data, request_or_reject
+from .message_del import msg_delete
 
 
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message, state: FSMContext):
+    await Form.waiting.set()  # ✅ правильный способ
+    await message.answer("""Начат процесс подачи заявки. Если он не будет завершён за 30 минут,
+     то произойдет  автоматическая отмена Вашей заявки. """)
+
+    # Запускаем задачу сброса состояния через 30 минут
+    asyncio.create_task(reset_state_after_timeout(state, message.chat.id, 30 * 60))  # 30 минут
+
     async with state.proxy() as data:
         data['dist_url_and_namefile'] = {}
         data['list_photo_path'] = []
@@ -43,11 +52,11 @@ async def bot_start(message: types.Message, state: FSMContext):
     else:
         try:
             i = random.randint(1,5)
-            await message.answer_photo(photo=InputFile(f'img/supp{i}.jpeg'), reply_markup=ReplyKeyboardRemove())
+            msg = await message.answer_photo(photo=InputFile(f'img/supp{i}.jpeg'), reply_markup=ReplyKeyboardRemove())
         except FileNotFoundError as e:
             pass
         keyboard = request_or_reject()
-        msg = await message.answer("""Уважаемый пользователь, вас приветствует ТГ-бот ИИС!
+        await message.answer("""Уважаемый пользователь, вас приветствует ТГ-бот ИИС!
 Прошу Вас ответить на несколько вопросов,
 которые мне необходимо задать для отправки
 Вашей заявки в техническую поддержку.""",
@@ -55,4 +64,17 @@ async def bot_start(message: types.Message, state: FSMContext):
         await state.set_state(Form.beginning)
         await state.update_data(message_for_edit=msg.message_id)
 
+
+
+async def reset_state_after_timeout(state: FSMContext, chat_id, delay: int):
+    await asyncio.sleep(delay)
+    # Проверяем текущее состояние перед сбросом
+    current_state = await state.get_state()
+    if current_state is not None:  # если состояние ещё активно
+        msg = await bot.send_message(chat_id, """⏰⏰⏰ Ваша заявка отменена в связи с истечением времени на её подачу.
+        Пожалуйста, нажмите start.""")
+        data = await state.get_data()
+        msg_start = data.get("message_for_edit")
+        await msg_delete(msg_start, msg.message_id, chat_id)
+        await state.finish()
 
