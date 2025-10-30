@@ -14,8 +14,8 @@ from .message_del import msg_delete
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message, state: FSMContext):
     await Form.waiting.set()  # ✅ правильный способ
-    await message.answer("""Начат процесс подачи заявки. Если он не будет завершён за 30 минут,
-     то произойдет  автоматическая отмена Вашей заявки. """)
+    await message.answer("Начат процесс подачи заявки. Если он не будет завершён за 30 минут, "
+                         "то произойдет  автоматическая отмена Вашей заявки.")
 
     # Запускаем задачу сброса состояния через 30 минут
     asyncio.create_task(reset_state_after_timeout(state, message.chat.id, 30 * 60))  # 30 минут
