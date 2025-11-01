@@ -19,7 +19,8 @@ async def bot_start(message: types.Message, state: FSMContext):
                          "то произойдет  автоматическая отмена Вашей заявки.")
 
     # Запускаем задачу сброса состояния через 30 минут
-    asyncio.create_task(reset_state_after_timeout(state, message.chat.id, 30 * 60))  # 30 минут
+    asyncio.create_task(reset_state_after_timeout(state, message.chat.id, message.from_user.full_name,
+                                                  message.from_user.id, 30 * 60))  # 30 минут
 
     async with state.proxy() as data:
         data['dist_url_and_namefile'] = {}
@@ -67,7 +68,7 @@ async def bot_start(message: types.Message, state: FSMContext):
 
 
 
-async def reset_state_after_timeout(state: FSMContext, chat_id, delay: int):
+async def reset_state_after_timeout(state: FSMContext, chat_id,user_name, user_id, delay: int):
     await asyncio.sleep(delay)
     # Проверяем текущее состояние перед сбросом
     current_state = await state.get_state()
@@ -75,7 +76,7 @@ async def reset_state_after_timeout(state: FSMContext, chat_id, delay: int):
         msg = await bot.send_message(chat_id, f"⏰⏰⏰ Ваша заявка отменена в связи с истечением времени на её подачу. "
                                               "Пожалуйста, нажмите /start.")
         logging.info(f"""Ваша заявка отменена в связи с истечением времени на её подачу. 
-{current_state} {msg.from_user.full_name}""")
+{current_state} {user_name} {user_id}""")
         data = await state.get_data()
         msg_start = data.get("message_for_edit")
         await msg_delete(msg_start, msg.message_id, chat_id)
