@@ -262,8 +262,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
 
     await state.update_data(send_yes_no=True)
     data = await state.get_data()
+    await state.finish()
     dist_url_and_namefile = data.get('dist_url_and_namefile')
-    data = await state.get_data()
     message_id_start = data.get("message_for_edit")
     await msg_delete(message_from_user_id=message.from_user.id,
                          message_id_start=message_id_start,
@@ -317,7 +317,6 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                        priority=data.get('priority')
                                        )
 
-    await state.finish()
 
 
 @dp.callback_query_handler(lambda c: c.data == "save_no", state=Form.yes_no_save)

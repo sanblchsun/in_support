@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
@@ -71,8 +72,10 @@ async def reset_state_after_timeout(state: FSMContext, chat_id, delay: int):
     # Проверяем текущее состояние перед сбросом
     current_state = await state.get_state()
     if current_state is not None:  # если состояние ещё активно
-        msg = await bot.send_message(chat_id, "⏰⏰⏰ Ваша заявка отменена в связи с истечением времени на её подачу. "
+        msg = await bot.send_message(chat_id, f"⏰⏰⏰ Ваша заявка отменена в связи с истечением времени на её подачу. "
                                               "Пожалуйста, нажмите /start.")
+        logging.info(f"""Ваша заявка отменена в связи с истечением времени на её подачу. 
+{current_state} {msg.from_user.full_name}""")
         data = await state.get_data()
         msg_start = data.get("message_for_edit")
         await msg_delete(msg_start, msg.message_id, chat_id)
