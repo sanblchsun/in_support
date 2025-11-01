@@ -56,7 +56,8 @@ async def send_messege_to_chat(dp: Dispatcher,
     #         <pre>предварительно отформатированный блок кода фиксированной ширины</pre>'
 
     html = f"""
-           <i><b>Заявка №: </b></i><code>{number_from_1c}</code>
+           <i><b>Заявка</b></i>
+<code>Телеграмм Бота</code>
            <i><b>Компания: </b></i>
 <code>{firma}</code>
            <i><b>Фамилия Имя: </b></i>

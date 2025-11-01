@@ -11,8 +11,6 @@ def get_html(description=' ',
 <code>{description}</code>
 <i><b>Приоритет заявки:</b></i>
 <code>{priority}</code>
-<i><b>Hомер заявки №:</b></i>
-<code>{number_request}</code>
 """
  # 1c integrated
 # <i><b>Статус заявки:</b></i>

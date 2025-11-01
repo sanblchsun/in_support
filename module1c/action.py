@@ -172,15 +172,15 @@ async def set_brom(e_mail, firma, full_name, cont_telefon, description, priority
     return docLink.Номер
 
 
-if __name__ == "__main__":
-    start = time.time()
-    # asyncio.run(set_brom("dashjkjh", "Буревестник (АГ Марин)"))
-    asyncio.run(set_brom(e_mail="test@test.ru",
-                         firma="Марин",
-                         full_name="Test Testovich",
-                         cont_telefon="9991111111",
-                         description="TEST",
-                         priority="низкий"))
-    end = time.time()
-    print("The time of execution of above program is :",
-          (end - start) * 10 ** 3, "ms")
+# if __name__ == "__main__":
+#     start = time.time()
+#     # asyncio.run(set_brom("dashjkjh", "Буревестник (АГ Марин)"))
+#     asyncio.run(set_brom(e_mail="test@test.ru",
+#                          firma="Марин",
+#                          full_name="Test Testovich",
+#                          cont_telefon="9991111111",
+#                          description="TEST",
+#                          priority="низкий"))
+#     end = time.time()
+#     print("The time of execution of above program is :",
+#           (end - start) * 10 ** 3, "ms")

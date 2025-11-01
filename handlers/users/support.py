@@ -19,7 +19,7 @@ from loader import dp, bot
 from base.sqlighter import SQLighter
 from keyboards.inline.buttons import *
 from utils.notify_admins import send_messege_to_chat, is_admin_get_firms
-from module1c import action
+# from module1c import action
 # from bs4 import BeautifulSoup
 from .message_del import msg_delete
 
@@ -237,28 +237,28 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
 
 @dp.message_handler(text="Отправить заявку \U0001FAE1", state=Form.send_request)
 async def action_request_to_support(message: types.Message, state: FSMContext):
-    async def edit_html_request(num):
-        data = await state.get_data()
-        html_request = get_html(description=data.get('description'),
-                                priority=data.get('priority'),
-                                number_request=num)
-        try:
-            # 1c integrated
-            # await bot.edit_message_text(text=html_request,
-            #                             chat_id=message.from_user.id,
-            #                             message_id=data.get('message_for_edit'), reply_markup=btn_get_status())
-            # 1c integrated
-
-            await bot.edit_message_text(text=html_request,
-                                        chat_id=message.from_user.id,
-                                        message_id=data.get('message_for_edit'))
-
-
-        except Exception as e:
-            await state.finish()
-            await message.answer(html_request)
-            logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id} 
-            Сообщение HTML возможно удалено ошибка в строке 261 кода support.py """)
+    # async def edit_html_request(num):
+    #     data = await state.get_data()
+    #     html_request = get_html(description=data.get('description'),
+    #                             priority=data.get('priority'),
+    #                             number_request=num)
+    #     try:
+    #         # 1c integrated
+    #         # await bot.edit_message_text(text=html_request,
+    #         #                             chat_id=message.from_user.id,
+    #         #                             message_id=data.get('message_for_edit'), reply_markup=btn_get_status())
+    #         # 1c integrated
+    #
+    #         await bot.edit_message_text(text=html_request,
+    #                                     chat_id=message.from_user.id,
+    #                                     message_id=data.get('message_for_edit'))
+    #
+    #
+    #     except Exception as e:
+    #         await state.finish()
+    #         await message.answer(html_request)
+    #         logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id}
+    #         Сообщение HTML возможно удалено ошибка в строке 261 кода support.py """)
 
     await state.update_data(send_yes_no=True)
     data = await state.get_data()
@@ -275,15 +275,14 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     except MessageError as e:
         ...
     # 1c integrated
-    number_from_1c = await action.set_brom(full_name=data.get('full_name'),
-                                           e_mail=data.get('e_mail'),
-                                           firma=data.get('firma'),
-                                           cont_telefon=data.get('telefon'),
-                                           description=data.get('description'),
-                                           priority=data.get('priority'))
-    # number_from_1c = '000000000'
-    user_id = message.from_user.id
+    # number_from_1c = await action.set_brom(full_name=data.get('full_name'),
+    #                                        e_mail=data.get('e_mail'),
+    #                                        firma=data.get('firma'),
+    #                                        cont_telefon=data.get('telefon'),
+    #                                        description=data.get('description'),
+    #                                        priority=data.get('priority'))
     # 1c integrated
+    user_id = message.from_user.id
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
                                                                    e_mail=data.get('e_mail'),
                                                                    firma=data.get('firma'),
@@ -291,8 +290,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                                                    description=data.get('description'),
                                                                    priority=data.get('priority'),
                                                                    message_id=user_id,
-                                                                   http_to_attach=dist_url_and_namefile,
-                                                                   number_from_1c=number_from_1c)
+                                                                   http_to_attach=dist_url_and_namefile
+                                                                   )
     if ident_error:
         try:
             await message.edit_text(
@@ -303,11 +302,10 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
             ...
     else:
         # 1c integrated
-        await edit_html_request(number_from_1c)
+        # await edit_html_request(number_from_1c)
         # 1c integrated
-        await message.answer(f"""Заявка отправлена, 
-    номер заявки: {number_from_1c}.
-    Чтобы направить еще одну заявку, нажмите /start""")
+        await message.answer(f"""Заявка отправлена. Номер зарегистрированной заявки придет на контактную почту.
+Чтобы направить еще одну заявку, нажмите /start""")
 
         if check_send_bot:
             await send_messege_to_chat(dp,
@@ -316,8 +314,8 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                        firma=data.get('firma'),
                                        cont_telefon=data.get('telefon'),
                                        description=data.get('description'),
-                                       priority=data.get('priority'),
-                                       number_from_1c=number_from_1c)
+                                       priority=data.get('priority')
+                                       )
 
     await state.finish()
 

@@ -111,7 +111,7 @@ async def send_email_with_attachment(e_mail,
     # msg["To"] = ', '.join(e_mail)
     # msg["cc"] = ', '.join(cc_emails)
 
-    html = get_html(e_mail, firma, full_name, cont_telefon, description, priority, number_from_1c)
+    html = get_html(e_mail, firma, full_name, cont_telefon, description, priority)
 
     if html:
         msg.attach(MIMEText(html, "html"))
