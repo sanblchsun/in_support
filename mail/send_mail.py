@@ -102,7 +102,8 @@ async def send_email_with_attachment(e_mail,
 
     # create the message
     msg = MIMEMultipart()
-    msg["From"] = FROM
+    msg["From"] = e_mail
+    msg["Sender"] = FROM
     msg["To"] = msg_To
     msg['Reply-To'] = e_mail
     msg["Subject"] = "Заявка из Телеграмм Бота"
