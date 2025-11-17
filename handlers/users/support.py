@@ -1,7 +1,7 @@
 ﻿import asyncio
 import logging
 import re
-
+from base.mysqlrequests import write_to_mysql
 import emoji
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -237,6 +237,7 @@ async def action_request_to_support2(callback_query: types.CallbackQuery, state:
 
 @dp.message_handler(text="Отправить заявку \U0001FAE1", state=Form.send_request)
 async def action_request_to_support(message: types.Message, state: FSMContext):
+    await message.delete()
     # async def edit_html_request(num):
     #     data = await state.get_data()
     #     html_request = get_html(description=data.get('description'),
@@ -268,12 +269,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     await msg_delete(message_from_user_id=message.from_user.id,
                          message_id_start=message_id_start,
                          message_id_end=message.message_id)
-    msg = await message.answer("Вы нажали 'Отправить заявку'", reply_markup=ReplyKeyboardRemove())
-    await asyncio.sleep(5)
-    try:
-        await msg.delete()
-    except MessageError as e:
-        ...
+
     # 1c integrated
     # number_from_1c = await action.set_brom(full_name=data.get('full_name'),
     #                                        e_mail=data.get('e_mail'),
@@ -282,7 +278,38 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     #                                        description=data.get('description'),
     #                                        priority=data.get('priority'))
     # 1c integrated
+
     user_id = message.from_user.id
+
+    asyncio.create_task(write_to_mysql(e_mail=data.get('e_mail'),
+                         firma=data.get('firma'),
+                         full_name=data.get('full_name'),
+                         cont_telefon=data.get('telefon'),
+                         description=data.get('description'),
+                         priority=data.get('priority'),
+                         message_id=user_id))
+    status = await message.answer("📨 Начинаю отправку заявки.")
+    is_done = False
+    # 🌕 Анимация: точки увеличиваются 1→30→1 по циклу
+    async def progress_message():
+        count = 1
+        direction = 1  # 1 = растёт, -1 = уменьшается
+
+        while not is_done:
+            bar = "•" * count  # можно заменить на '.' если хочешь проще
+            await status.edit_text(f"📨 Отправка заявки...\n{bar}")
+            await asyncio.sleep(1)  # скорость анимации
+
+            count += direction
+            if count >= 30:
+                direction = -1
+            elif count <= 1:
+                direction = 1
+
+
+    # запускаем индикатор параллельно
+    progress_task = asyncio.create_task(progress_message())
+
     ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
                                                                    e_mail=data.get('e_mail'),
                                                                    firma=data.get('firma'),
@@ -292,6 +319,10 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                                                    message_id=user_id,
                                                                    http_to_attach=dist_url_and_namefile
                                                                    )
+    # останавливаем индикатор
+    is_done = True
+    progress_task.cancel()
+
     if ident_error:
         try:
             await message.edit_text(
@@ -304,7 +335,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
         # 1c integrated
         # await edit_html_request(number_from_1c)
         # 1c integrated
-        await message.answer(f"""Заявка отправлена. Номер зарегистрированной заявки придет на контактную почту.
+        await status.edit_text(f"""Заявка отправлена. Номер зарегистрированной заявки придет на контактную почту.
 Чтобы направить еще одну заявку, нажмите /start""")
 
         if check_send_bot:

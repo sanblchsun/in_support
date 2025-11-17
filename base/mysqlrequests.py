@@ -1,84 +1,85 @@
 import datetime
 import logging
-import shutil
-
-import pymysql
-
-
-def convertToBinary(file_name):
-    with open(file_name, 'rb') as file:
-        binary_file = file.read()
-        return binary_file
+import os
+import sys
+from configparser import ConfigParser
+import aiomysql
 
 
-def convertToFile(binarydata, file_name):
-    with open(file_name, 'wb') as file:
-        file.write(binarydata)
+async def write_to_mysql(
+    e_mail: str,
+    firma: str,
+    full_name: str,
+    cont_telefon: str,
+    description: str,
+    priority: str,
+    message_id: int
+):
+    """Асинхронная запись данных в MySQL"""
 
+    # Получаем настройки подключения из mysql.ini
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(base_path, 'mysql.ini')
 
-def action(e_mail,
-           firma,
-           full_name,
-           cont_telefon,
-           description,
-           priority,
-           host,
-           port,
-           user,
-           password,
-           database,
-           message_id,
-           files_list):
+    if not os.path.exists(config_path):
+        logging.error('❌ Файл mysql.ini не найден')
+        sys.exit(1)
+
+    cfg = ConfigParser()
+    cfg.read(config_path)
+
+    host = cfg.get("connect", "host")
+    port = int(cfg.get("connect", "port"))
+    user = cfg.get("connect", "user")
+    password = cfg.get("connect", "password")
+    database = cfg.get("connect", "database")
+
+    # Подключение к БД
     try:
-        con = pymysql.connect(host=host,
-                              port=port,
-                              user=user,
-                              password=password,
-                              database=database,
-                              cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with con.cursor() as cursor:
-                select_sql = f"SELECT id FROM users WHERE id_telegram={message_id}"
-                # select_sql = "SELECT * FROM requests"
-                cursor.execute(select_sql)
-                rows = cursor.fetchall()
-                if len(rows) == 0:
-                    sql_users = "INSERT INTO users (id_telegram) VALUES (%s)"
-                    cursor.execute(sql_users, message_id)
-                    select_sql = f"SELECT id FROM users WHERE id_telegram={message_id}"
-                    cursor.execute(select_sql)
-                    rows = cursor.fetchall()
+        conn = await aiomysql.connect(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            db=database,
+            autocommit=False
+        )
 
-                sql_requests = "INSERT INTO requests (user_id, full_name, firma, e_mail," \
-                               " telefon, description, priority, date)" \
-                               " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-                cursor.execute(sql_requests, (rows[0]['id'],
-                                              full_name,
-                                              firma,
-                                              e_mail,
-                                              cont_telefon,
-                                              description,
-                                              priority,
-                                              datetime.datetime.now()))
-                # select_sql1 = "SELECT MAX(id) FROM requests"
-                # cursor.execute(select_sql1)
-                # rows1 = cursor.fetchall()
-                # sql_attach = "INSERT INTO attach (id_requests, file) VALUES (%s, %s)"
-                # if len(files_list) != 0:
-                    # for file in files_list:
-                        ## convert_file = str(file).split('/')[-1]
-                        # convert_file = convertToBinary(file)
-                        # cursor.execute(sql_attach, (rows1[0]['MAX(id)'], convert_file))
-                con.commit()
-        except Exception as e:
-            logging.info(f'Ошибка запроса sql: {e}')
-        finally:
-            con.close()
+        async with conn.cursor(aiomysql.DictCursor) as cursor:
+            # Проверяем наличие пользователя
+            await cursor.execute("SELECT id FROM users WHERE id_telegram=%s", (message_id,))
+            rows = await cursor.fetchall()
+
+            if not rows:
+                await cursor.execute("INSERT INTO users (id_telegram) VALUES (%s)", (message_id,))
+                await cursor.execute("SELECT id FROM users WHERE id_telegram=%s", (message_id,))
+                rows = await cursor.fetchall()
+
+            user_id = rows[0]['id']
+
+            # Добавляем заявку
+            sql_requests = """
+                INSERT INTO requests 
+                    (user_id, full_name, firma, e_mail, telefon, description, priority, date)
+                VALUES 
+                    (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            await cursor.execute(sql_requests, (
+                user_id,
+                full_name,
+                firma,
+                e_mail,
+                cont_telefon,
+                description,
+                priority,
+                datetime.datetime.now()
+            ))
+
+            await conn.commit()
+            logging.info(f"✅ Заявка успешно добавлена  в базу для пользователя {message_id}")
+
     except Exception as e:
-        logging.info(f'Ошибка подключения к базе: {e}')
+        logging.exception(f"❌ Ошибка при работе с базой данных: {e}")
     finally:
-        if len(files_list) != 0:
-            str1 = str(files_list[0])
-            path = str1[:str1.find('/', str1.find('/')+1)]
-            shutil.rmtree(path, ignore_errors=False, onerror=None)
-
+        if 'conn' in locals():
+            conn.close()

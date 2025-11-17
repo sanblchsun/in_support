@@ -22,9 +22,9 @@ async def message_error(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.attach_yes, content_types=['video'])
 async def action_document(message: types.Message, state: FSMContext):
     doc_size = message.video.file_size
-    if doc_size > 41943040:
+    if doc_size > 18874368:
         await message.reply("""В заявку вложен файл с недопустимым размером,
-        повторите с файлом менее 40Мб """)
+        повторите с файлом менее 20Мб """)
         await message.delete()
         return
     keyboard = send_request_yes_no_def()
@@ -38,9 +38,9 @@ async def action_document(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.attach_yes, content_types=['document'])
 async def action_document(message: types.Message, state: FSMContext):
     doc_size = message.document.file_size
-    if doc_size > 41943040:
+    if doc_size > 18874368:
         await message.reply("""В заявку вложен файл с недопустимым размером,
-        повторите с файлом менее 40Мб """)
+        повторите с файлом менее 20Мб """)
         await message.delete()
         return
     keyboard = send_request_yes_no_def()
@@ -54,9 +54,9 @@ async def action_document(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.attach_yes, content_types=['photo'])
 async def action_photo(message: types.Message, state: FSMContext):
     doc_size = message.photo[-1].file_size
-    if doc_size > 41943040:
+    if doc_size > 18874368:
         await message.reply("""В заявку вложен файл с недопустимым размером,
-        повторите с файлом менее 40Мб """)
+        повторите с файлом менее 20Мб """)
         await message.delete()
         return
     keyboard = send_request_yes_no_def()
