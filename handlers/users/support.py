@@ -22,6 +22,7 @@ from utils.notify_admins import send_messege_to_chat, is_admin_get_firms
 # from module1c import action
 # from bs4 import BeautifulSoup
 from .message_del import msg_delete
+from mail.email_executor import send_email_in_executor
 
 
 @dp.message_handler(state=None, commands=['firms'])
@@ -152,7 +153,7 @@ async def action_description(message: types.Message, state: FSMContext):
     except Exception as e:
         msg = await message.answer(html)
         await  state.update_data(message_for_edit=msg.message_id)
-        logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id} 
+        logging.info(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id} 
         Сообщение HTML возможно удалено ошибка в строке 148 кода support.py """)
 
 
@@ -190,7 +191,7 @@ async def action_priority_btn(callback_query: types.CallbackQuery, state: FSMCon
     except Exception as e:
         msg1 = await callback_query.message.answer(html_request)
         await  state.update_data(message_for_edit=msg1.message_id)
-        logging.error(f"""Пользователь: {callback_query.from_user.full_name}, его id: {callback_query.from_user.id} 
+        logging.info(f"""Пользователь: {callback_query.from_user.full_name}, его id: {callback_query.from_user.id} 
         Сообщение HTML возможно удалено ошибка в строке 187 кода support.py """)
         await msg_delete(message_from_user_id=callback_query.from_user.id,
                          message_id_start=callback_query.message.message_id - 1,
@@ -258,7 +259,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
     #     except Exception as e:
     #         await state.finish()
     #         await message.answer(html_request)
-    #         logging.error(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id}
+    #         logging.info(f"""Пользователь: {message.from_user.full_name}, его id: {message.from_user.id}
     #         Сообщение HTML возможно удалено ошибка в строке 261 кода support.py """)
 
     await state.update_data(send_yes_no=True)
@@ -296,8 +297,11 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
         direction = 1  # 1 = растёт, -1 = уменьшается
 
         while not is_done:
-            bar = "•" * count  # можно заменить на '.' если хочешь проще
-            await status.edit_text(f"📨 Отправка заявки...\n{bar}")
+            bar = "•" * count
+            try:
+                await status.edit_text(f"📨 Отправка заявки...\n{bar}")
+            except:
+                pass
             await asyncio.sleep(1)  # скорость анимации
 
             count += direction
@@ -307,10 +311,10 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                 direction = 1
 
 
-    # запускаем индикатор параллельно
+    # запускаем прогресс-бар
     progress_task = asyncio.create_task(progress_message())
-
-    ident_error, check_send_bot = await send_email_with_attachment(full_name=data.get('full_name'),
+    # отправляем email через executor (не блокирует event loop)
+    ident_error, check_send_bot = await send_email_in_executor(full_name=data.get('full_name'),
                                                                    e_mail=data.get('e_mail'),
                                                                    firma=data.get('firma'),
                                                                    cont_telefon=data.get('telefon'),
@@ -319,7 +323,7 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
                                                                    message_id=user_id,
                                                                    http_to_attach=dist_url_and_namefile
                                                                    )
-    # останавливаем индикатор
+    # останавливаем прогресс-бар
     is_done = True
     progress_task.cancel()
 

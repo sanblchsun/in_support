@@ -7,5 +7,5 @@ db.db
 test.py
 *.pyc
 .idea/
-**/__pycache__
+__pycache__/
 .idea/misc.xml
