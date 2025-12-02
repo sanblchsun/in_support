@@ -18,6 +18,7 @@ async def write_to_mysql(
     """Асинхронная запись данных в MySQL"""
 
     # Получаем настройки подключения из mysql.ini
+    global conn
     base_path = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_path, 'mysql.ini')
 
@@ -82,4 +83,4 @@ async def write_to_mysql(
         logging.exception(f"❌ Ошибка при работе с базой данных: {e}")
     finally:
         if 'conn' in locals():
-            conn.close()
+            await conn.close()

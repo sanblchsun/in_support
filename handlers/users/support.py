@@ -282,13 +282,13 @@ async def action_request_to_support(message: types.Message, state: FSMContext):
 
     user_id = message.from_user.id
 
-    asyncio.create_task(write_to_mysql(e_mail=data.get('e_mail'),
+    await write_to_mysql(e_mail=data.get('e_mail'),
                          firma=data.get('firma'),
                          full_name=data.get('full_name'),
                          cont_telefon=data.get('telefon'),
                          description=data.get('description'),
                          priority=data.get('priority'),
-                         message_id=user_id))
+                         message_id=user_id)
     status = await message.answer("📨 Начинаю отправку заявки.")
     is_done = False
     # 🌕 Анимация: точки увеличиваются 1→30→1 по циклу
