@@ -14,4 +14,3 @@ def get_html(description=' ', priority=' '):
 <code>{priority}</code>
 """
     return html_text
-
