@@ -2,7 +2,7 @@
 documents/
 db.db
 *.ini
-*.ini_
+*.ini*
 .env
 test.py
 *.pyc
