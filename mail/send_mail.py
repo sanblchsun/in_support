@@ -2,6 +2,8 @@ import logging
 import mimetypes
 import os
 import smtplib
+import socket
+import ssl
 import sys
 from configparser import ConfigParser
 from copy import deepcopy
@@ -95,7 +97,7 @@ def send_email_with_attachment(e_mail,
     if not to_addrs:
         logging.info("Не указан основной адреса получателей в файле email.ini")
         val_error = 1
-        return val_error
+        return val_error, check_send_bot
 
     to_addrs0 = to_addrs
     msg_To = f"{to_addrs}"
@@ -151,21 +153,87 @@ def send_email_with_attachment(e_mail,
                                       f'{http_to_attach[key_iter][2]}')
             files_list.append(pahh_file)
         process_attachment(msg, files_list)
+    # разбираем адрес и порт из строки server (формат "host" или "host:port")
+    smtp_host = host
+    smtp_port = 0
+    if ":" in host:
+        smtp_host, _, port_str = host.rpartition(":")
+        try:
+            smtp_port = int(port_str)
+        except ValueError:
+            smtp_host, smtp_port = host, 0
+
+    port_info = smtp_port or 25  # для сообщений: пустой порт означает порт 25 по умолчанию
+
+    # --- подключение к почтовому серверу ---
     try:
-        server = smtplib.SMTP(host)
-    except Exception as e:
-        logging.info(f"Ошибка при создании сервера SMTP: {e}")
+        if smtp_port == 465:
+            # неявный SSL (SMTPS): соединение сразу шифрованное, starttls() не нужен
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+    except (socket.timeout, TimeoutError):
+        logging.error(f"Не удалось подключиться к почтовому серверу {smtp_host}:{port_info} — "
+                      f"превышено время ожидания. Вероятно, порт {port_info} заблокирован "
+                      f"файрволом или провайдером (частый случай для порта 25).")
         val_error = 2
-        return val_error
+        return val_error, check_send_bot
+    except ConnectionRefusedError:
+        logging.error(f"Почтовый сервер {smtp_host} отклонил подключение на порт {port_info} — "
+                      f"порт закрыт или сервис на нём не слушает. Проверьте порт в email.ini.")
+        val_error = 2
+        return val_error, check_send_bot
+    except socket.gaierror:
+        logging.error(f"Не удалось определить адрес почтового сервера '{smtp_host}' (ошибка DNS). "
+                      f"Проверьте правильность имени сервера в email.ini.")
+        val_error = 2
+        return val_error, check_send_bot
+    except ssl.SSLError as e:
+        logging.error(f"Ошибка SSL при подключении к {smtp_host}:{port_info} — "
+                      f"порт, скорее всего, не поддерживает SSL (для 465 нужен SSL, для 587/25 — STARTTLS). "
+                      f"Техническая информация: {e}")
+        val_error = 2
+        return val_error, check_send_bot
+    except Exception as e:
+        logging.error(f"Не удалось подключиться к почтовому серверу {smtp_host}:{port_info}. "
+                      f"Техническая информация: {e}")
+        val_error = 2
+        return val_error, check_send_bot
+
+    # --- авторизация и отправка письма ---
     try:
-        server.starttls()
+        if smtp_port != 465:
+            server.starttls()
         server.login(FROM, password)
         server.sendmail(FROM, to_addrs0, msg.as_string())
+    except smtplib.SMTPAuthenticationError:
+        logging.error(f"Ошибка авторизации на почтовом сервере {smtp_host}: неверный логин "
+                      f"'{FROM}' или пароль (параметры from/passwd в email.ini).")
+        val_error = 3
+    except smtplib.SMTPSenderRefused:
+        logging.error(f"Почтовый сервер отклонил адрес отправителя '{FROM}'. "
+                      f"Возможно, адрес не существует или запрещён для отправки.")
+        val_error = 3
+    except smtplib.SMTPRecipientsRefused as e:
+        logging.error(f"Почтовый сервер отклонил всех получателей: {list(e.recipients.keys())}. "
+                      f"Проверьте to_addrs/to_addrs1 в email.ini.")
+        val_error = 3
+    except smtplib.SMTPServerDisconnected:
+        logging.error(f"Почтовый сервер {smtp_host} неожиданно разорвал соединение во время отправки.")
+        val_error = 3
+    except smtplib.SMTPException as e:
+        logging.error(f"Ошибка SMTP при отправке письма через {smtp_host}:{port_info}. "
+                      f"Техническая информация: {e}")
+        val_error = 3
     except Exception as e:
-        logging.info(f"Ошибка при отправке письма: {e}")
+        logging.error(f"Не удалось отправить письмо через {smtp_host}:{port_info}. "
+                      f"Техническая информация: {e}")
         val_error = 3
     finally:
-        server.quit()
+        try:
+            server.quit()
+        except Exception:
+            pass
 
     # удаляем временные файлы
     if len(files_list) != 0:
