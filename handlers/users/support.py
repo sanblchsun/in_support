@@ -167,6 +167,22 @@ async def action_description(message: types.Message, state: FSMContext):
     await state.set_state(Form.priority)
 
 
+@dp.message_handler(state=Form.description, content_types=types.ContentTypes.ANY)
+async def action_description_not_text(message: types.Message, state: FSMContext):
+    async def del_message(message, msg):
+        await asyncio.sleep(5)
+        try:
+            await bot.delete_message(chat_id=message.from_user.id, message_id=msg.message_id)
+        except MessageError as e:
+            ...
+    try:
+        await message.delete()
+    except MessageError as e:
+        ...
+    msg = await message.answer("Ошибка! Файл или фото можно вставить далее, тут нужен текст")
+    await del_message(message, msg)
+
+
 @dp.callback_query_handler(lambda c: c.data in ["low_btn_press",
                                                 "medium_btn_press",
                                                 "high_btn_press",
